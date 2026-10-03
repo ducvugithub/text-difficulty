@@ -2,9 +2,11 @@
 # raw data stays local (vocab list is >100MB, GitHub's per-file limit)
 data/
 # large generated artifacts
-*/outputs/*
-!*/outputs/.gitkeep
+**/outputs/*
+!**/outputs/.gitkeep
 vocab-diff/*/outputs/*
 !vocab-diff/*/outputs/.gitkeep
 vocab-diff/vocab-freq/cleaned/*
 !vocab-diff/vocab-freq/cleaned/.gitkeep
+.venv/
+__pycache__/

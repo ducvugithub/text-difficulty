@@ -1,22 +1,20 @@
 # vocab-freq — clean the frequency list
 
-Input: `../../data/finnish_vocab.txt` (`count word`, ~44.6M lines, raw surface forms).
-Output: `cleaned/` (lemma-level freq list) + `reports/` (what each step dropped/merged).
+Input `data/finnish_vocab.txt` (raw surface forms, 44.6M lines, web/forum corpus) -> lemma-level list.
+Scripts live in `../scripts/` (run in order from there; intermediate files in `cleaned/`, one report per step in `reports/`).
 
-## Steps (src/, run in order; each writes a report)
-1. `01_normalize` — lowercase, strip punctuation-only / numeric / URL / too-long tokens.
-2. `02_analyze` — run the analyser (apertium-fin / Voikko / Omorfi) -> lemma(s) per surface form. Cache results.
-   Keep all readings with the surface count split or first-reading (decide + log).
-3. `03_compound_split` — compounds (>1 stem): word freq = freq of the RAREST component stem.
-4. `04_merge_lemmas` — surface forms -> same lemma: DECISION PENDING, compare sum vs min vs max.
-   Sum is the standard for lemma frequency (min would punish common lemmas for rare inflections);
-   evaluate by correlation with train labels.
-5. `05_filter_foreign` — drop English borrowings / foreign tokens (analyser fails + latin chars pattern,
-   or language-ID). Report how many and the top examples; check not removing established loans (e.g. "kahvi").
-6. `06_other_cleaning` — candidates: proper nouns/names, typos (hapax with edit-distance-1 to a frequent word),
-   abbreviations, HTML/URL residue, case merging, very-low-frequency hapax cutoff.
-7. `07_build_bags` — rank -> `vocab_bag_1..10` (same bucketing as existing features; check
-   existing definition in the Features.csv before redefining).
+Setup: `voikkospell` on PATH (Voikko dictionary installed); steps 6-8 need `python -m venv .venv && .venv/bin/pip install -r requirements.txt`.
+Gotcha: Voikko needs a UTF-8 locale or it silently rejects every word with ä/ö (`common.run_voikko` sets `LC_ALL`).
 
-## Reports (`reports/`)
-Per step: rows in/out, top-N dropped, top-N merged. Review before trusting the list.
+| step | script | what it does |
+|---|---|---|
+| 1 | `01_normalize.py` | drop digits, symbols/URLs, punctuation, hyphen fragments, >45 chars (`--min-count`) |
+| 2 | `02_analyze.py` | Voikko analysis, parallel (~3 min); lemma readings + compound stems per surface form |
+| 3 | `03_merge_lemmas.py` | forms -> lemmas; drops names, abbreviations, unrecognised (typos/English/spoken Finnish); ambiguous forms count in full for each lemma; `freq` = all forms added up |
+| 4 | `04_compound_stems.py` | adds `rarest_stem_freq`: a compound (>=2 stems) takes the `freq` of its rarest stem; a stem with no standalone entry caps it at the compound's own `freq` |
+| 5 | `05_finalize.py` | sanity filters + ranked `lemma_freq.tsv` (`--min-freq`) |
+| 6 | `06_build_bags.py` | 10 equal-count bags, original Revita definition (`--variant`, `--top-n`) |
+| 7 | `07_text_features.py` | recompute OOV / `vocab_bag_k_coverage` for train/valid/test + OOV overlap report |
+| 8 | `08_compare_variants.py` | Spearman vs label for each variant x top-n (`freq` vs `rarest_stem_freq`) |
+
+Step-by-step input/output/columns and findings: `reports/CLEANUP_SUMMARY.md`.

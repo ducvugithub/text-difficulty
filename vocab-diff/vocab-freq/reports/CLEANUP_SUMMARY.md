@@ -39,64 +39,97 @@ Scripts in `vocab-diff/scripts/`, intermediate files in `cleaned/` (git-ignored)
 
 ### 4. Compound stems: `04_compound_stems.py`
 - **Input:** `cleaned/03_lemmas.tsv`
-- **Output:** `cleaned/04_lemmas_stem.tsv`, columns: `lemma class n_stems n_forms freq rarest_stem_freq`
-  - `n_stems`: number of stems (≥2 = compound); the stem names are not kept
-  - `freq`: unchanged from step 3
-  - `rarest_stem_freq`: the `freq` of the compound's rarest stem; equals `freq` for non-compounds
-  - e.g. `työpaikka`: 2 stems, `freq` 520,192, `rarest_stem_freq` 3,418,001 (the rarer of työ 3,418,001 and paikka 3,462,791)
-  - e.g. `talo`: 1 stem, `freq` 1,044,279, `rarest_stem_freq` 1,044,279 (not a compound)
+- **Output:**
+  - `cleaned/04_lemmas_stem.tsv`, columns: `lemma class n_stems n_forms freq rarest_stem_freq`
+    - `n_stems`: number of stems (≥2 = compound)
+    - `freq`: unchanged from step 3
+    - `rarest_stem_freq`: the `freq` of the compound's rarest stem; equals `freq` for non-compounds
+    - e.g. `työpaikka`: 2 stems, `freq` 520,192, `rarest_stem_freq` 3,418,001 (the rarer of työ 3,418,001 and paikka 3,462,791)
+    - e.g. `talo`: 1 stem, `freq` 1,044,279, `rarest_stem_freq` 1,044,279 (not a compound)
+  - `cleaned/04_stems.tsv`, columns: `stem freq n_compounds` (28,623 distinct stems)
+    - `stem`: a stem found inside compounds (e.g. `tilata`)
+    - `freq`: its standalone lemma frequency from the list; empty if it never occurs as its own word (5,996 stems)
+    - `n_compounds`: how many compound lemmas contain it
+  - `cleaned/04_compound_stems.tsv`, columns: `compound stem stem_freq` (14.8M rows, one per compound × stem), for auditing
+    - e.g. `ostotilaustoiminnallisuus`: `ostaa` 1,518,077, `tilata` 1,391,607, `toimia` 2,981,153 → `rarest_stem_freq` 1,391,607
 - **Steps:**
   - For a compound (≥2 stems), look up each stem's standalone `freq` and take the smallest: a reader needs all the stems
   - A stem with no standalone entry is rare, so the compound's own `freq` also joins the minimum
-- **Results:** 6.5M lemmas, 6.17M of them compounds, 5.66M changed, 510k had a missing stem
+  - Voikko's `=` inside a stem (`takaisin=kytkentä`) is removed before lookup, so the stem matches its standalone lemma
+- **Results:** 6.5M lemmas, 6.17M of them compounds, 5.78M changed, 389k had a missing stem
 
-### 5. Finalize: `05_finalize.py`
-- **Input:** `cleaned/04_lemmas_stem.tsv`
-- **Output:** `cleaned/lemma_freq.tsv`, columns: `rank lemma class n_stems n_forms freq rarest_stem_freq`
-  - `rank`: position in the sorted list (1 = most frequent); the other columns as in step 4
-  - e.g. `1 olla teonsana 1 957 156017700 156017700`
+### 5. Rank: `05_rank.py`
+- **Input:** `cleaned/04_lemmas_stem.tsv`, `cleaned/04_stems.tsv`
+- **Output:**
+  - `cleaned/lemma_freq.tsv`, columns: `rank lemma class n_stems n_forms freq rarest_stem_freq`
+    - `rank`: position in the sorted list (1 = most frequent); the other columns as in step 4
+    - e.g. `1 olla teonsana 1 957 156017700 156017700`
+  - `cleaned/stem_freq.tsv`, columns: `rank stem freq n_compounds`
+    - `rank`: position by `freq` (empty if the stem never occurs as its own word, listed last)
+    - `freq`, `n_compounds`: as in `04_stems.tsv`
+    - e.g. `1 olla 156017700 773`
 - **Steps:**
-  - Drop single letters (`a`, `x`: letters and symbols, not words), prefix fragments (`koulu-`: not standalone words), non-plain words (anything that is not letters with inner hyphens)
-  - Sort by `--sort-by` (default `rarest_stem_freq`; `freq` is the alternative): the ranking is what step 6 cuts into bags, so it decides which lemmas count as "frequent"
-  - Optional `--min-freq`: drop rare lemmas (off by default)
-- **Results:** nothing dropped, 6.5M lemmas
+  - Sort the lemmas by `--sort-by` (default `freq`; `rarest_stem_freq` is the alternative) and add `rank`: this ranking is what step 6 cuts into bags
+  - Sort the stems by `freq` and add `rank`
+  - Optional `--min-freq`: drop lemmas below this value of the `--sort-by` column (off by default)
+  - No cleaning here: names, abbreviations, single letters, fragments and non-words were already removed in steps 1 and 3
+- **Results:** 6.5M lemmas in and out; 22,627 stems ranked + 5,996 stems with no standalone freq (no rank)
 
 ### 6. Build bags: `06_build_bags.py`
 - **Input:** `cleaned/lemma_freq.tsv`
-- **Output:** `cleaned/vocab_bags.tsv`, columns: `lemma freq bag`
-  - `freq`: the value of the chosen `--variant` column (`freq` or `rarest_stem_freq`)
-  - `bag`: 1 (rarest) to 10 (most frequent)
+- **Output:** `cleaned/vocab_bags_{method}.tsv`, one file per bag method, columns: `lemma freq bag`
+  - `freq`: the value of the chosen `--freq-column` (`freq` or `rarest_stem_freq`)
+  - `bag`: 1 (rarest) up to the highest bag number (most frequent)
   - e.g. `olla 156017700 10`
-- **Steps:**
-  - Keep the `--top-n` most frequent lemmas (default 20000)
-  - 10 equal-count bins over the frequency-ascending list (1 = rarest, 10 = most frequent), original Revita definition
-- **Results:** 20,000 lemmas → 2,000 per bag
+- **Steps:** cut the ranked lemmas into bags with `--freq-column` (default `freq`) and `--bag-method` (default: all three)
+  - `uniform_rank_bin`: every bag has the same number of lemmas (the original Revita definition, over the whole list). Lemmas ordered by frequency are cut into 10 equal groups
+  - `uniform_cumfreq_bin`: every bag covers 10% of the total freq count. Lemmas ordered from most to least frequent with a running total of `freq`; a new bag starts each time the running total passes another 10% of the grand total. Top bags hold few lemmas, the bottom bag holds millions
+  - `log10_freq_bin`: one bag per factor of 10 in frequency, `floor(log10(freq)) + 1`; 9 bags are used because the data spans ~10^0 to 10^8
+- **Results:** per-bag lemma counts, freq ranges and % of total freq count are in `reports/06_build_bags.md`; e.g. `uniform_rank_bin`: bag 10 = 650k lemmas holding 99.4% of the total freq count; `uniform_cumfreq_bin`: bag 10 = 26k lemmas and bag 1 = 4.3M lemmas, each holding 10%
 
 ### 7. Text features: `07_text_features.py`
-- **Input:** train/valid/test CSVs (`text` column) + `lemma_freq.tsv`
-- **Output:** `text-diff/feature-curated-based/outputs/vocab_features_{train,valid,test}.csv`, columns:
+- **Input:** train/valid/test CSVs (`text` column) + `lemma_freq.tsv`; options `--freq-column` (default `freq`), `--bag-method` (default `uniform_cumfreq_bin`)
+- **Output:** `text-diff/feature-curated-based/outputs/vocab_features_{bag_method}_{train,valid,test}.csv`, columns:
   - `row`: row index in the source CSV; `label`: difficulty label
   - `n_word_tokens`: word tokens counted (names/abbreviations excluded)
   - `OOV_coverage`: share of tokens not in any bag
-  - `vocab_bag_1..10_coverage`: share of tokens in each bag
-  - `frac_unrecognised`, `frac_unlisted`, `frac_beyond_top_n`: the OOV share split by reason
+  - `vocab_bag_1..N_coverage`: share of tokens in each bag
+  - `frac_unrecognised`, `frac_unlisted`: the OOV share split by reason
   - e.g. `row 0, label 1.0, n_word_tokens 193, OOV_coverage 0.28`
 - **Steps:**
   - Tokenize, lemmatize with Voikko (highest-frequency candidate), look up the bag
   - Recompute `OOV_coverage` and `vocab_bag_k_coverage`; names/abbreviations skipped
-- **Results:** 97% of lemma types in each split are in the full list; 3.6% of tokens unrecognised; 49% beyond the top 20k
+- **Results** (`freq` + `uniform_cumfreq_bin`, whole list), shares of all words in train; the four shares add up to 100%:
+
+  | in bag | OOV: Voikko-unknown | OOV: recognised, not in list | skipped (name/abbrev) |
+  |---:|---:|---:|---:|
+  | 92.7% | 3.6% | 0.2% | 3.5% |
+
+  - `per-text-avg-oov`: each text's OOV rate, averaged over texts (train 5.1%, old 22.4%)
+  - `all-text-pool-oov`: all unknown words / all counted words (train 3.9%); names/abbreviations are left out of the denominator
+  - By label (see `07_text_features.md`): average share of words in each bag, per split. In train the rarest bag (bag 1) rises from 3.3% at label 1.0 to 13.9% at label 6.0
+  - An earlier run that binned only the top 20k lemmas gave per-text-avg-oov 54-58%, because 49% of words fell beyond the cut; that cut has been removed
 
 ### 8. Compare variants: `08_compare_variants.py`
 - **Input:** `cleaned/lemma_freq.tsv` + 5,000 sampled train texts
-- **Output:** `reports/08_compare_variants.md`, columns: `variant top-n rho_mean_log_freq rho_OOV_coverage rho_mean_bag`
-  - `variant`: `freq` or `rarest_stem_freq`; `top-n`: how many top lemmas were binned
-  - `rho_*`: Spearman correlation with the difficulty label for that text feature
-  - e.g. `rarest_stem_freq | 10000 | -0.264 | +0.353 | -0.358`
-- **Steps:** compute the three text features per text for each variant × top-n, correlate with the label
-- **Results:**
-  - `freq` is better on mean log-freq (-0.32 vs -0.26); equal on OOV and bags at 10k
-  - Smaller top-n better (10k > 20k > 50k)
-  - Earlier test of other ways to combine forms (most frequent form, rarest form): no better than `freq`, so dropped
+- **Output:** `reports/08_compare_variants.md`, columns: `freq column, bag method, rho_mean_log_freq, rho_OOV_coverage, rho_mean_bag`
+  - `rho_*`: Spearman correlation with the difficulty label for that text feature (more negative on mean log-freq / mean bag = better)
+  - e.g. `freq | uniform_cumfreq_bin | - | -0.319 | +0.074 | -0.368`
+- **Steps:** compute the three text features per text for each freq column × bag method, correlate with the label
+- **Results:** correlation with the label (more negative on `mean_bag` / `mean_log_freq` = better):
+
+  | freq column | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag |
+  |---|---|---:|---:|---:|
+  | freq | uniform_rank_bin | -0.319 | +0.074 | -0.082 |
+  | freq | uniform_cumfreq_bin | -0.319 | +0.074 | **-0.368** |
+  | freq | log10_freq_bin | -0.319 | +0.074 | -0.319 |
+  | rarest_stem_freq | uniform_rank_bin | -0.262 | +0.074 | -0.217 |
+  | rarest_stem_freq | uniform_cumfreq_bin | -0.262 | +0.074 | -0.315 |
+  | rarest_stem_freq | log10_freq_bin | -0.262 | +0.074 | -0.265 |
+
+  - `freq` beats `rarest_stem_freq` on every method
+  - `uniform_cumfreq_bin` is best; `uniform_rank_bin` over the whole list loses the signal (99.4% of the freq count sits in its top bag)
+  - OOV correlation is the same (+0.074) everywhere: with the whole list, only unrecognised words are OOV
 
 ## Word classes
 
@@ -127,8 +160,8 @@ Dropped before the final list:
 | `etuliite` | prefix fragment (koulu-) | step 5 |
 
 ## Open points
-- **Compound rule inflates junk compounds** (e.g. "hyvänhyvyys", own count 24, gets the frequency of "hyvä"), which then rank in the top 20k. Options: rank by the plain sum and apply the rule only when looking up text tokens, or filter low-count compounds first.
-- **`freq` vs `rarest_stem_freq`, and top-n for the bags, are not settled** (leaning `freq` + 10k).
+- **Compound rule inflates junk compounds** (e.g. "hyvänhyvyys", own count 24, gets the frequency of "hyvä"), which then rank high in the list. Options: rank by the plain sum and apply the rule only when looking up text tokens, or filter low-count compounds first.
+- **Freq column and bag method are not settled** (leaning `freq` + `uniform_cumfreq_bin`; differences between methods are small).
 - **Stanza disambiguation on the text side is not built yet** (see the section below); steps 7-8 numbers will change once it is.
 - Spoken Finnish (mun, mä, oon...) is dropped as unrecognised and counts as OOV in text.
 

@@ -11,10 +11,10 @@ Gotcha: Voikko needs a UTF-8 locale or it silently rejects every word with ä/ö
 | 1 | `01_normalize.py` | drop digits, symbols/URLs, punctuation, hyphen fragments, >45 chars (`--min-count`) |
 | 2 | `02_analyze.py` | Voikko analysis, parallel (~3 min); lemma readings + compound stems per surface form |
 | 3 | `03_merge_lemmas.py` | forms -> lemmas; drops names, abbreviations, unrecognised (typos/English/spoken Finnish); ambiguous forms count in full for each lemma; `freq` = all forms added up |
-| 4 | `04_compound_stems.py` | adds `rarest_stem_freq`: a compound (>=2 stems) takes the `freq` of its rarest stem; a stem with no standalone entry caps it at the compound's own `freq` |
-| 5 | `05_finalize.py` | sanity filters + ranked `lemma_freq.tsv` (`--min-freq`) |
-| 6 | `06_build_bags.py` | 10 equal-count bags, original Revita definition (`--variant`, `--top-n`) |
+| 4 | `04_compound_stems.py` | adds `rarest_stem_freq`: a compound (>=2 stems) takes the `freq` of its rarest stem; a stem with no standalone entry caps it at the compound's own `freq`; also writes `04_stems.tsv` (stem list with freq) and `04_compound_stems.tsv` (audit) |
+| 5 | `05_rank.py` | rank lemmas -> `lemma_freq.tsv` and stems -> `stem_freq.tsv` (`--sort-by`, optional `--min-freq`) |
+| 6 | `06_build_bags.py` | bag the ranked lemmas: `--freq-column` (`freq` / `rarest_stem_freq`), `--bag-method` (`uniform_rank_bin` / `uniform_cumfreq_bin` / `log10_freq_bin`, explained in `reports/06_build_bags.md`) |
 | 7 | `07_text_features.py` | recompute OOV / `vocab_bag_k_coverage` for train/valid/test + OOV overlap report |
-| 8 | `08_compare_variants.py` | Spearman vs label for each variant x top-n (`freq` vs `rarest_stem_freq`) |
+| 8 | `08_compare_variants.py` | Spearman vs label for each freq column x bag method |
 
 Step-by-step input/output/columns and findings: `reports/CLEANUP_SUMMARY.md`.

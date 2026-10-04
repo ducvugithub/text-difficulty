@@ -1,4 +1,5 @@
 """Helpers shared by the text-level scripts (07, 08). Needs pandas (see requirements.txt)."""
+import math
 from collections import Counter
 
 import pandas as pd
@@ -40,14 +41,35 @@ def load_lemma_list(variant):
     return df["lemma"].tolist(), dict(zip(df["lemma"], df[variant]))
 
 
-def assign_bags(lemmas_desc, top_n, n_bags=N_BAGS):
-    """Same definition as the original Revita features: equal-count bins over the frequency-ascending list,
-    bag 1 = rarest ... bag n_bags = most frequent. (The original code could emit a stray bag 11 for the
-    remainder; here the remainder goes into the top bag.)"""
-    kept = lemmas_desc[:top_n] if top_n else lemmas_desc
-    ascending = kept[::-1]
-    size = max(len(ascending) // n_bags, 1)
-    return {lemma: min(i // size + 1, n_bags) for i, lemma in enumerate(ascending)}
+BAG_METHODS = ("uniform_rank_bin", "uniform_cumfreq_bin", "log10_freq_bin")
+
+BAG_METHOD_DOCS = {
+    "uniform_rank_bin": "Every bag has the same NUMBER of lemmas. Lemmas are ordered by frequency and cut into 10 equal "
+    "groups (original Revita definition, but over the whole list).",
+    "uniform_cumfreq_bin": "Every bag covers the same share of the TOTAL freq count (10% each). Lemmas are ordered from most "
+    "to least frequent with a running total of freq; a new bag starts each time the running total passes another 10% of the "
+    "grand total. The top bags hold few lemmas, the bottom bag holds millions.",
+    "log10_freq_bin": "One bag per factor of 10 in frequency: bag = floor(log10(freq)) + 1 (freq 1-9 -> bag 1, 10-99 -> bag 2, "
+    "...). The data spans ~10^0 to 10^8, so 9 bags are used.",
+}
+
+
+def assign_bags(lemmas_desc, freq, method, n_bags=N_BAGS):
+    """lemma -> bag, 1 = rarest ... highest = most frequent. `lemmas_desc` is ordered by `freq` descending."""
+    if method == "uniform_rank_bin":
+        ascending = lemmas_desc[::-1]
+        size = max(len(ascending) // n_bags, 1)  # remainder goes into the top bag (the original code emitted a stray bag 11)
+        return {lemma: min(i // size + 1, n_bags) for i, lemma in enumerate(ascending)}
+    if method == "uniform_cumfreq_bin":
+        total = sum(freq[lemma] for lemma in lemmas_desc)
+        bags, before = {}, 0
+        for lemma in lemmas_desc:
+            bags[lemma] = n_bags - min(int(before / total * n_bags), n_bags - 1)
+            before += freq[lemma]
+        return bags
+    if method == "log10_freq_bin":
+        return {lemma: min(int(math.log10(freq[lemma])) + 1, n_bags) for lemma in lemmas_desc}
+    raise ValueError(f"unknown bag method {method!r}")
 
 
 def best_lemma(candidates, freq):

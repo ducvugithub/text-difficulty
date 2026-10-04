@@ -1,7 +1,7 @@
-"""Step 8: which frequency variant / list size separates difficulty best?
+"""Step 8: which frequency column / bag method / list size separates difficulty best?
 
-For each variant (`freq`, `rarest_stem_freq` = with the compound rule) and
-top-n, compute text-level features on a sample and report Spearman correlation with the difficulty label:
+For each --freq-column x bag method (all on the full list), compute
+text-level features on a sample and report Spearman correlation with the difficulty label:
   mean_log_freq (log10(freq+1) per token, OOV = 0), OOV_coverage, mean_bag (OOV = 0).
 A strongly negative mean_log_freq / mean_bag correlation = a better difficulty signal.
 
@@ -16,8 +16,8 @@ from scipy.stats import spearmanr
 from common import ensure_dirs, write_report
 from text_common import analyse_tokens, assign_bags, best_lemma, load_lemma_list, load_split, token_counts
 
-VARIANTS = ["freq", "rarest_stem_freq"]
-TOP_NS = [10_000, 20_000, 50_000, 100_000, 0]
+FREQ_COLUMNS = ["freq", "rarest_stem_freq"]
+METHODS = ["uniform_rank_bin", "uniform_cumfreq_bin", "log10_freq_bin"]
 
 
 def features(counts, chosen, freq, bags):
@@ -58,16 +58,16 @@ def main():
     label = df["label"].to_numpy()
 
     lines = [f"# 08 compare variants ({args.split}, {len(df):,} texts)", "",
-             "| variant | top-n | rho mean_log_freq | rho OOV_coverage | rho mean_bag |", "|---|---:|---:|---:|---:|"]
-    for variant in VARIANTS:
-        lemmas, freq = load_lemma_list(variant)
+             "| freq column | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag |", "|---|---|---:|---:|---:|"]
+    for column in FREQ_COLUMNS:
+        lemmas, freq = load_lemma_list(column)
         chosen = {tok: ("skip", None) if st in ("name", "abbrev") else ("w", best_lemma(c, freq) if st == "ok" else None)
                   for tok, (st, c) in analysis.items()}
-        for top_n in TOP_NS:
-            feats = pd.DataFrame(features(counts, chosen, freq, assign_bags(lemmas, top_n)), columns=["lf", "oov", "bag"])
+        for method in METHODS:
+            feats = pd.DataFrame(features(counts, chosen, freq, assign_bags(lemmas, freq, method)), columns=["lf", "oov", "bag"])
             rho = [spearmanr(feats[c], label).statistic for c in ("lf", "oov", "bag")]
-            lines.append(f"| {variant} | {top_n or 'all'} | {rho[0]:+.3f} | {rho[1]:+.3f} | {rho[2]:+.3f} |")
-        print(f"{variant} done")
+            lines.append(f"| {column} | {method} | {rho[0]:+.3f} | {rho[1]:+.3f} | {rho[2]:+.3f} |")
+        print(f"{column} done")
     write_report("08_compare_variants.md", lines)
 
 

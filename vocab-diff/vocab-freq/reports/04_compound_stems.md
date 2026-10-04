@@ -1,8 +1,10 @@
 # 04 compound stems
 - lemmas: 6,501,706; compounds (>=2 stems): 6,168,005
-- compounds whose freq changed: 5,658,260; with a stem missing standalone (own freq caps them): 509,710
+- compounds whose freq changed: 5,778,624; with a stem missing standalone (own freq caps them): 389,287
 
 Columns of 04_lemmas_stem.tsv: `lemma`; `class` Voikko word class; `n_stems` number of stems (>=2 = compound); `n_forms` inflected forms merged into the lemma; `freq` all its forms added up (from step 3); `rarest_stem_freq` = `freq` of the compound's rarest stem (= `freq` for non-compounds).
+
+Also written: `04_stems.tsv` (`stem`; `freq` its standalone lemma frequency, empty if it never occurs as its own word; `n_compounds` compounds containing it; 28,623 distinct stems) and `04_compound_stems.tsv` (`compound`, `stem`, `stem_freq`: one row per compound x stem, to audit the rarest-stem rule).
 
 ## Largest changes (freq -> rarest_stem_freq)
 | lemma | freq | rarest_stem_freq |

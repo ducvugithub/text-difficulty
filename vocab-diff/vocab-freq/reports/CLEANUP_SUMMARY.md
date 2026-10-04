@@ -99,15 +99,17 @@ Scripts in `vocab-diff/scripts/`, intermediate files in `cleaned/` (git-ignored)
 - **Steps:**
   - Tokenize, lemmatize with Voikko (highest-frequency candidate), look up the bag
   - Recompute `OOV_coverage` and `vocab_bag_k_coverage`; names/abbreviations skipped
-- **Results** (`freq` + `uniform_cumfreq_bin`, whole list), shares of all words in train; the four shares add up to 100%:
+- **Subsets:** every table in `07_text_features.md` is shown for `all` rows and for `finnish-native-only` (`origine` = Real; the Russian-origin rows are translations). Test is all native, so it appears once
+- **Results** (`freq` + `uniform_cumfreq_bin`, whole list), per-text-avg-oov: train all 5.1%, train native 4.0%; valid all 5.6%, valid native 4.0%; test 3.8%
+  - Shares of all words in train (all rows), adding up to 100%:
 
-  | in bag | OOV: Voikko-unknown | OOV: recognised, not in list | skipped (name/abbrev) |
-  |---:|---:|---:|---:|
-  | 92.7% | 3.6% | 0.2% | 3.5% |
+    | in bag | OOV: Voikko-unknown | OOV: recognised, not in list | skipped (name/abbrev) |
+    |---:|---:|---:|---:|
+    | 92.7% | 3.6% | 0.2% | 3.5% |
 
-  - `per-text-avg-oov`: each text's OOV rate, averaged over texts (train 5.1%, old 22.4%)
-  - `all-text-pool-oov`: all unknown words / all counted words (train 3.9%); names/abbreviations are left out of the denominator
-  - By label (see `07_text_features.md`): average share of words in each bag, per split. In train the rarest bag (bag 1) rises from 3.3% at label 1.0 to 13.9% at label 6.0
+  - `per-text-avg-oov`: each text's OOV rate, averaged over texts (old pipeline: 22.4% train all, 27.9% train native)
+  - `all-text-pool-oov`: all unknown words / all counted words (train all 3.9%); names/abbreviations are left out of the denominator
+  - By label (see `07_text_features.md`): average share of words in each bag. In train (all rows) the rarest bag (bag 1) rises from 3.3% at label 1.0 to 13.9% at label 6.0
   - An earlier run that binned only the top 20k lemmas gave per-text-avg-oov 54-58%, because 49% of words fell beyond the cut; that cut has been removed
 
 ### 8. Compare variants: `08_compare_variants.py`
@@ -116,20 +118,25 @@ Scripts in `vocab-diff/scripts/`, intermediate files in `cleaned/` (git-ignored)
   - `rho_*`: Spearman correlation with the difficulty label for that text feature (more negative on mean log-freq / mean bag = better)
   - e.g. `freq | uniform_cumfreq_bin | - | -0.319 | +0.074 | -0.368`
 - **Steps:** compute the three text features per text for each freq column × bag method, correlate with the label
-- **Results:** correlation with the label (more negative on `mean_bag` / `mean_log_freq` = better):
+- **Results:** correlation with the label on train (more negative on `mean_bag` / `mean_log_freq` = better), for all rows (5,000 sampled) and for Finnish-native-only (all 2,332 native rows):
 
-  | freq column | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag |
-  |---|---|---:|---:|---:|
-  | freq | uniform_rank_bin | -0.319 | +0.074 | -0.082 |
-  | freq | uniform_cumfreq_bin | -0.319 | +0.074 | **-0.368** |
-  | freq | log10_freq_bin | -0.319 | +0.074 | -0.319 |
-  | rarest_stem_freq | uniform_rank_bin | -0.262 | +0.074 | -0.217 |
-  | rarest_stem_freq | uniform_cumfreq_bin | -0.262 | +0.074 | -0.315 |
-  | rarest_stem_freq | log10_freq_bin | -0.262 | +0.074 | -0.265 |
+  | subset | freq column | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag |
+  |---|---|---|---:|---:|---:|
+  | all | freq | uniform_rank_bin | -0.319 | +0.074 | -0.082 |
+  | all | freq | uniform_cumfreq_bin | -0.319 | +0.074 | **-0.368** |
+  | all | freq | log10_freq_bin | -0.319 | +0.074 | -0.319 |
+  | all | rarest_stem_freq | uniform_rank_bin | -0.262 | +0.074 | -0.217 |
+  | all | rarest_stem_freq | uniform_cumfreq_bin | -0.262 | +0.074 | -0.315 |
+  | all | rarest_stem_freq | log10_freq_bin | -0.262 | +0.074 | -0.265 |
+  | native only | freq | uniform_rank_bin | -0.406 | +0.278 | -0.287 |
+  | native only | freq | uniform_cumfreq_bin | -0.406 | +0.278 | -0.396 |
+  | native only | freq | log10_freq_bin | -0.406 | +0.278 | **-0.403** |
+  | native only | rarest_stem_freq | uniform_rank_bin | -0.370 | +0.278 | -0.330 |
+  | native only | rarest_stem_freq | uniform_cumfreq_bin | -0.370 | +0.278 | -0.342 |
+  | native only | rarest_stem_freq | log10_freq_bin | -0.370 | +0.278 | -0.370 |
 
-  - `freq` beats `rarest_stem_freq` on every method
-  - `uniform_cumfreq_bin` is best; `uniform_rank_bin` over the whole list loses the signal (99.4% of the freq count sits in its top bag)
-  - OOV correlation is the same (+0.074) everywhere: with the whole list, only unrecognised words are OOV
+  - The vocab signals are stronger on Finnish-native-only (mean_log_freq -0.41 vs -0.32, OOV +0.28 vs +0.07): the translated rows dilute them
+  - `freq` beats `rarest_stem_freq` everywhere; `uniform_cumfreq_bin` and `log10_freq_bin` are about equal and clearly better than `uniform_rank_bin`
 
 ## Word classes
 
@@ -160,9 +167,14 @@ Dropped before the final list:
 | `etuliite` | prefix fragment (koulu-) | step 5 |
 
 ## Open points
-- **Compound rule inflates junk compounds** (e.g. "hyvänhyvyys", own count 24, gets the frequency of "hyvä"), which then rank high in the list. Options: rank by the plain sum and apply the rule only when looking up text tokens, or filter low-count compounds first.
+- **`rarest_stem_freq` makes junk compounds look common.**
+  - Some lemmas are junk, e.g. "hyvänhyvyys" (two words stuck together) appears only 24 times (`freq` 24)
+  - The compound rule gives it the `freq` of its rarest stem. Its stems are common words, so its `rarest_stem_freq` is over 10M, as high as "hyvä" itself
+  - Ranking or binning by `rarest_stem_freq` therefore puts such junk among the real common words (see `manual_check_sample.md`)
+  - The default is now `freq`, so the bags are not affected; the problem only appears if `rarest_stem_freq` is used for ranking
+  - Options: (a) keep ranking by `freq` and use `rarest_stem_freq` only when looking up words in a text; (b) drop compounds with a very low `freq` (e.g. under 5) before ranking
 - **Freq column and bag method are not settled** (leaning `freq` + `uniform_cumfreq_bin`; differences between methods are small).
-- **Stanza disambiguation on the text side is not built yet** (see the section below); steps 7-8 numbers will change once it is.
+- **TODO: use a context-aware analyser for the text side.** Steps 7-8 currently use Voikko without context: an ambiguous word gets the candidate lemma with the highest list frequency, whatever the sentence says. Plan: Stanza picks among Voikko's candidates (see the section below). The step 7-8 numbers will change once it is in.
 - Spoken Finnish (mun, mä, oon...) is dropped as unrecognised and counts as OOV in text.
 
 ---

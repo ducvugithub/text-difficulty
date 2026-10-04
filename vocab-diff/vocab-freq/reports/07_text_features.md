@@ -1,19 +1,22 @@
 # 07 text features / OOV check
 - frequency column freq, bag method uniform_cumfreq_bin (6,501,706 binned lemmas, 10 bags, 6,501,706 in full list), names: skip
+- every table is shown for two subsets: `all` rows, and `finnish-native-only` (`origine` = Real; the Russian-origin rows are translations)
 
 - `per-text-avg-oov`: each text's OOV rate (unknown words / counted words), averaged over texts: every text counts equally.
 - `all-text-pool-oov`: all unknown words in the split / all counted words: every word counts equally.
 - The last four columns are shares of ALL words in the split and add up to 100%. OOV = the two OOV columns together, divided by all words except the skipped names/abbreviations.
 
-| split | texts | words | per-text-avg-oov (old) | per-text-avg-oov (new) | all-text-pool-oov (new) | in bag | OOV: Voikko-unknown | OOV: recognised, not in list | skipped (name/abbrev) |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| train | 8,293 | 1,226,757 | 22.4% | 5.1% | 3.9% | 92.7% | 3.6% | 0.2% | 3.5% |
-| valid | 1,011 | 141,641 | 22.5% | 5.6% | 4.1% | 92.3% | 3.8% | 0.2% | 3.7% |
-| test | 865 | 264,256 | 28.1% | 3.8% | 3.9% | 92.0% | 3.5% | 0.2% | 4.3% |
+| split | subset | texts | words | per-text-avg-oov (old) | per-text-avg-oov (new) | all-text-pool-oov (new) | in bag | OOV: Voikko-unknown | OOV: recognised, not in list | skipped (name/abbrev) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| train | all | 8,293 | 1,226,757 | 22.4% | 5.1% | 3.9% | 92.7% | 3.6% | 0.2% | 3.5% |
+| train | finnish-native-only | 2,332 | 704,370 | 27.9% | 4.0% | 3.8% | 91.9% | 3.5% | 0.2% | 4.4% |
+| valid | all | 1,011 | 141,641 | 22.5% | 5.6% | 4.1% | 92.3% | 3.8% | 0.2% | 3.7% |
+| valid | finnish-native-only | 263 | 70,783 | 27.6% | 4.0% | 3.9% | 91.8% | 3.5% | 0.2% | 4.5% |
+| test | all | 865 | 264,256 | 28.1% | 3.8% | 3.9% | 92.0% | 3.5% | 0.2% | 4.3% |
 
 ## By label (average share of words per bag; bag 1 = rarest, bag 10 = most frequent)
 
-### train
+### train, all
 
 | label | texts | per-text-avg-oov | bag 1 | bag 2 | bag 3 | bag 4 | bag 5 | bag 6 | bag 7 | bag 8 | bag 9 | bag 10 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -28,7 +31,21 @@
 | 5.5 | 976 | 5.4% | 11.1% | 10.6% | 9.9% | 10.3% | 9.4% | 8.0% | 8.4% | 9.5% | 8.0% | 9.5% |
 | 6.0 | 143 | 2.5% | 13.9% | 11.4% | 10.9% | 10.1% | 11.6% | 6.8% | 6.0% | 8.3% | 8.5% | 9.9% |
 
-### valid
+### train, finnish-native-only
+
+| label | texts | per-text-avg-oov | bag 1 | bag 2 | bag 3 | bag 4 | bag 5 | bag 6 | bag 7 | bag 8 | bag 9 | bag 10 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1.0 | 1 | 0.0% | 0.0% | 3.6% | 9.8% | 4.7% | 6.2% | 5.2% | 13.0% | 19.7% | 30.1% | 7.8% |
+| 1.5 | 106 | 6.2% | 7.3% | 7.5% | 8.9% | 10.2% | 10.1% | 8.1% | 10.8% | 9.7% | 9.3% | 11.9% |
+| 2.0 | 236 | 2.3% | 5.8% | 7.4% | 9.3% | 9.9% | 9.7% | 8.8% | 12.2% | 11.7% | 11.9% | 10.9% |
+| 3.0 | 152 | 1.5% | 11.1% | 11.0% | 9.1% | 10.2% | 9.4% | 7.9% | 9.6% | 10.2% | 8.9% | 11.3% |
+| 3.5 | 521 | 3.1% | 10.8% | 9.8% | 10.9% | 11.7% | 9.0% | 8.4% | 9.4% | 10.1% | 7.1% | 9.7% |
+| 4.0 | 104 | 1.9% | 10.4% | 8.6% | 9.0% | 9.0% | 10.5% | 9.9% | 8.7% | 10.3% | 12.8% | 9.1% |
+| 5.0 | 118 | 4.6% | 12.2% | 9.2% | 11.2% | 11.1% | 7.5% | 8.8% | 7.9% | 10.2% | 9.9% | 7.4% |
+| 5.5 | 976 | 5.4% | 11.1% | 10.6% | 9.9% | 10.3% | 9.4% | 8.0% | 8.4% | 9.5% | 8.0% | 9.5% |
+| 6.0 | 118 | 2.3% | 15.4% | 11.7% | 11.4% | 10.2% | 12.2% | 6.4% | 5.4% | 7.9% | 7.6% | 9.5% |
+
+### valid, all
 
 | label | texts | per-text-avg-oov | bag 1 | bag 2 | bag 3 | bag 4 | bag 5 | bag 6 | bag 7 | bag 8 | bag 9 | bag 10 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -43,7 +60,20 @@
 | 5.5 | 102 | 4.8% | 11.3% | 10.2% | 9.8% | 10.4% | 9.8% | 7.7% | 8.7% | 9.9% | 8.2% | 9.4% |
 | 6.0 | 15 | 2.3% | 13.7% | 9.8% | 10.6% | 9.8% | 11.8% | 7.3% | 5.9% | 8.9% | 8.9% | 11.1% |
 
-### test
+### valid, finnish-native-only
+
+| label | texts | per-text-avg-oov | bag 1 | bag 2 | bag 3 | bag 4 | bag 5 | bag 6 | bag 7 | bag 8 | bag 9 | bag 10 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1.5 | 15 | 6.3% | 4.8% | 6.9% | 7.8% | 10.7% | 8.7% | 7.9% | 13.5% | 10.2% | 10.4% | 12.8% |
+| 2.0 | 29 | 1.9% | 6.2% | 7.1% | 8.4% | 9.8% | 10.1% | 9.2% | 12.5% | 11.8% | 11.3% | 11.8% |
+| 3.0 | 17 | 2.6% | 9.1% | 10.0% | 8.7% | 10.6% | 10.6% | 8.4% | 8.2% | 11.7% | 9.4% | 10.6% |
+| 3.5 | 62 | 3.8% | 12.3% | 10.7% | 11.0% | 11.2% | 8.4% | 7.5% | 9.0% | 9.9% | 6.6% | 9.5% |
+| 4.0 | 11 | 1.7% | 11.6% | 7.7% | 7.2% | 8.2% | 12.1% | 8.7% | 10.2% | 11.7% | 11.6% | 9.1% |
+| 5.0 | 15 | 5.1% | 11.7% | 9.0% | 13.4% | 11.9% | 6.7% | 8.5% | 7.6% | 9.5% | 11.0% | 5.6% |
+| 5.5 | 102 | 4.8% | 11.3% | 10.2% | 9.8% | 10.4% | 9.8% | 7.7% | 8.7% | 9.9% | 8.2% | 9.4% |
+| 6.0 | 12 | 2.3% | 14.9% | 10.0% | 11.4% | 10.4% | 12.4% | 6.2% | 5.6% | 9.0% | 7.4% | 10.4% |
+
+### test, all
 
 | label | texts | per-text-avg-oov | bag 1 | bag 2 | bag 3 | bag 4 | bag 5 | bag 6 | bag 7 | bag 8 | bag 9 | bag 10 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|

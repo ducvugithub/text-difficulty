@@ -1,5 +1,5 @@
 # 03 merge lemmas
-- surface forms kept: 20,615,619 (2,751,341,018 tokens) -> 6,501,706 lemmas (03_lemmas.tsv)
+- surface forms kept: 20,615,619 (2,751,341,018 tokens) -> 6,459,885 lemmas (03_lemmas.tsv)
 - ambiguous forms count in full for every distinct lemma
 
 Columns of 03_lemmas.tsv: `lemma` dictionary form; `class` Voikko word class; `stems` stems it is built from (`+`-joined); `n_forms` inflected forms merged into the lemma; `freq` all those forms' counts added up.

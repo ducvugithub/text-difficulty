@@ -12,9 +12,10 @@ Gotcha: Voikko needs a UTF-8 locale or it silently rejects every word with ä/ö
 | 2 | `02_analyze.py` | Voikko analysis, parallel (~3 min); lemma readings + compound stems per surface form |
 | 3 | `03_merge_lemmas.py` | forms -> lemmas; drops names, abbreviations, unrecognised (typos/English/spoken Finnish); ambiguous forms count in full for each lemma; `freq` = all forms added up |
 | 4 | `04_compound_stems.py` | adds `rarest_stem_freq`: a compound (>=2 stems) takes the `freq` of its rarest stem; a stem with no standalone entry caps it at the compound's own `freq`; also writes `04_stems.tsv` (stem list with freq) and `04_compound_stems.tsv` (audit) |
-| 5 | `05_rank.py` | rank lemmas -> `lemma_freq.tsv` and stems -> `stem_freq.tsv` (`--sort-by`, optional `--min-freq`) |
-| 6 | `06_build_bags.py` | bag the ranked lemmas: `--freq-column` (`freq` / `rarest_stem_freq`), `--bag-method` (`uniform_rank_bin` / `uniform_cumfreq_bin` / `log10_freq_bin`, explained in `reports/06_build_bags.md`) |
+| 5 | `05_rank_and_filter.py` | tag English-looking stems (edit score <= 35 to the Wiktionary English gloss, helpers `english_borrowing.py`, `wiktionary.py`), remove them and their lemmas, rank the final `05_lemma_freq.tsv` and `05_stem_freq.tsv` |
+| 6 | `06_build_bags.py` | bag the ranked stems AND lemmas: `--bag-method` (`uniform_rank_bin` / `uniform_cumfreq_bin` / `log10_freq_bin`, explained in `reports/06_build_bags.md`) |
 | 7 | `07_text_features.py` | recompute OOV / `vocab_bag_k_coverage` for train/valid/test + OOV overlap report |
-| 8 | `08_compare_variants.py` | Spearman vs label for each freq column x bag method |
+| 8 | `08_compare_variants.py` | Spearman vs label for each level (stem / lemma) and bag method, all rows and Finnish-native-only |
+| 9 | `09_vocab_text_features.py` | builds the vocab text features with `VocabDiffFeatureConstruct` (`vocab-diff/vocab_construct.py`) for all splits and correlates them with the label; list in `docs/features.md` |
 
 Step-by-step input/output/columns and findings: `reports/CLEANUP_SUMMARY.md`.

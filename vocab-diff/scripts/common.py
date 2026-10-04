@@ -46,11 +46,17 @@ def _stems(wordbases):
     return [lemma for _, lemma in _WORDBASE.findall(wordbases) if lemma and not lemma.startswith("+") and lemma != "-"]
 
 
+def _suffixes(wordbases):
+    """Derivational suffixes of a WORDBASES string as 'surface>lemma' (e.g. 'lli+nen>+nen', 'ton>+ton')."""
+    return [f"{surface}>{lemma}" for surface, lemma in _WORDBASE.findall(wordbases) if lemma.startswith("+")]
+
+
 def run_voikko(words):
     """Analyse words with `voikkospell -m`.
 
     Returns one string per word: '-' if Voikko does not recognise it, else readings joined by ';',
-    each reading 'baseform|class|stem1+stem2' (deduplicated, Voikko order).
+    each reading 'baseform|class|stem1+stem2|suffix1,suffix2' (deduplicated, Voikko order; the 4th field is new,
+    older files have 3 fields and decode_readings accepts both).
 
     LC_ALL must be a UTF-8 locale: under the default C locale Voikko silently rejects every word with ä/ö.
     """
@@ -77,7 +83,7 @@ def run_voikko(words):
             return
         seen = []
         for base, cls, wb in readings.values():
-            enc = f"{base}|{cls}|{'+'.join(_stems(wb))}"
+            enc = f"{base}|{cls}|{'+'.join(_stems(wb))}|{','.join(_suffixes(wb))}"
             if enc not in seen:
                 seen.append(enc)
         results.append(";".join(seen))
@@ -110,14 +116,20 @@ def run_voikko(words):
     return results
 
 
-def decode_readings(field):
-    """'a|cls|s1+s2;b|cls|' -> [(base, cls, [stems])]; '-' -> []."""
+def decode_readings(field, full=False):
+    """'a|cls|s1+s2|sfx;b|cls||' -> [(base, cls, [stems])]; '-' -> [].
+    With full=True each reading also carries its derivational suffixes: (base, cls, [stems], ['surface>lemma'])."""
     if field == "-":
         return []
     readings = []
     for enc in field.split(";"):
-        base, cls, stems = enc.split("|")
-        readings.append((base, cls, stems.split("+") if stems else []))
+        parts = enc.split("|")
+        base, cls, stems = parts[0], parts[1], parts[2]
+        reading = (base, cls, stems.split("+") if stems else [])
+        if full:
+            suffixes = parts[3] if len(parts) > 3 and parts[3] else ""
+            reading += (suffixes.split(",") if suffixes else [],)
+        readings.append(reading)
     return readings
 
 

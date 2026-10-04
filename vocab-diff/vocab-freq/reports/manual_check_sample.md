@@ -2,7 +2,7 @@
 
 *Drawn before the `=` stem fix; ranks have shifted slightly since.*
 
-`lemma_freq.tsv` has 6,501,706 lemmas sorted by `rarest_stem_freq`. Q10 = the top 10% of ranks (most frequent), Q100 = the bottom 10% (rarest); each quantile is 650,170 lemmas wide.
+`05_lemma_freq.tsv` has 6,501,706 lemmas sorted by `rarest_stem_freq`. Q10 = the top 10% of ranks (most frequent), Q100 = the bottom 10% (rarest); each quantile is 650,170 lemmas wide.
 
 | quantile | rank | lemma | class | stems | n_forms | freq | rarest_stem_freq |
 |---|---:|---|---|---|---:|---:|---:|

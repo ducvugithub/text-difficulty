@@ -34,9 +34,36 @@ def analyse_tokens(tokens):
     return result
 
 
+def analyse_tokens_full(tokens):
+    """token -> (status, readings) with readings (base, cls, stems, suffixes).
+    status 'ok' keeps only the common-word readings; names/abbreviations keep all their readings;
+    unrecognised tokens have none."""
+    todo = sorted(t for t in tokens if len(t) <= MAX_TOKEN_LEN)
+    result = {t: ("unrecognised", []) for t in tokens if len(t) > MAX_TOKEN_LEN}
+    for i in range(0, len(todo), CHUNK):
+        part = todo[i : i + CHUNK]
+        for tok, field in zip(part, run_voikko(part)):
+            readings = decode_readings(field, full=True)
+            status, kept = select_readings(readings)
+            result[tok] = (status, kept if status == "ok" else readings)
+    return result
+
+
+def load_stem_list():
+    """Final stem list as (ordered stems, stem -> full count), highest count first."""
+    df = pd.read_csv(CLEANED / "05_stem_freq.tsv", sep="\t", usecols=["stem", "freq"], keep_default_na=False)
+    return df["stem"].tolist(), dict(zip(df["stem"], df["freq"]))
+
+
+def load_borrowed_stems():
+    """Stems tagged English-looking in step 5 (removed from the stem list)."""
+    df = pd.read_csv(CLEANED / "05_stem_borrowing.tsv", sep="\t", usecols=["stem", "borrowed"], keep_default_na=False)
+    return set(df.loc[df["borrowed"] == 1, "stem"])
+
+
 def load_lemma_list(variant):
     """Final list as (ordered lemmas, lemma -> freq of `variant`), highest frequency first."""
-    df = pd.read_csv(CLEANED / "lemma_freq.tsv", sep="\t", usecols=["lemma", variant], keep_default_na=False)
+    df = pd.read_csv(CLEANED / "05_lemma_freq.tsv", sep="\t", usecols=["lemma", variant], keep_default_na=False)
     df = df.sort_values(variant, ascending=False, kind="stable")
     return df["lemma"].tolist(), dict(zip(df["lemma"], df[variant]))
 
@@ -45,30 +72,30 @@ BAG_METHODS = ("uniform_rank_bin", "uniform_cumfreq_bin", "log10_freq_bin")
 
 BAG_METHOD_DOCS = {
     "uniform_rank_bin": "Every bag has the same NUMBER of lemmas. Lemmas are ordered by frequency and cut into 10 equal "
-    "groups (original Revita definition, but over the whole list).",
+    "groups (the original Revita definition).",
     "uniform_cumfreq_bin": "Every bag covers the same share of the TOTAL freq count (10% each). Lemmas are ordered from most "
     "to least frequent with a running total of freq; a new bag starts each time the running total passes another 10% of the "
-    "grand total. The top bags hold few lemmas, the bottom bag holds millions.",
-    "log10_freq_bin": "One bag per factor of 10 in frequency: bag = floor(log10(freq)) + 1 (freq 1-9 -> bag 1, 10-99 -> bag 2, "
-    "...). The data spans ~10^0 to 10^8, so 9 bags are used.",
+    "grand total. The first bags hold few lemmas, the last bag holds most of them.",
+    "log10_freq_bin": "One bag per factor of 10 in frequency, from the most frequent decade (bag 1) down to the rarest "
+    "(bag = highest decade - floor(log10(freq)) + 1). The data spans ~10^0 to 10^8, so 9 bags are used.",
 }
 
 
-def assign_bags(lemmas_desc, freq, method, n_bags=N_BAGS):
-    """lemma -> bag, 1 = rarest ... highest = most frequent. `lemmas_desc` is ordered by `freq` descending."""
+def assign_bags(items_desc, freq, method, n_bags=N_BAGS):
+    """item -> bag, 1 = most frequent ... highest number = rarest. `items_desc` is ordered by `freq` descending."""
     if method == "uniform_rank_bin":
-        ascending = lemmas_desc[::-1]
-        size = max(len(ascending) // n_bags, 1)  # remainder goes into the top bag (the original code emitted a stray bag 11)
-        return {lemma: min(i // size + 1, n_bags) for i, lemma in enumerate(ascending)}
+        size = max(len(items_desc) // n_bags, 1)  # the remainder goes into the last (rarest) bag
+        return {item: min(i // size + 1, n_bags) for i, item in enumerate(items_desc)}
     if method == "uniform_cumfreq_bin":
-        total = sum(freq[lemma] for lemma in lemmas_desc)
+        total = sum(freq[item] for item in items_desc)
         bags, before = {}, 0
-        for lemma in lemmas_desc:
-            bags[lemma] = n_bags - min(int(before / total * n_bags), n_bags - 1)
-            before += freq[lemma]
+        for item in items_desc:
+            bags[item] = min(int(before / total * n_bags) + 1, n_bags)
+            before += freq[item]
         return bags
     if method == "log10_freq_bin":
-        return {lemma: min(int(math.log10(freq[lemma])) + 1, n_bags) for lemma in lemmas_desc}
+        top = max(int(math.log10(freq[item])) for item in items_desc)
+        return {item: min(top - int(math.log10(freq[item])) + 1, n_bags) for item in items_desc}
     raise ValueError(f"unknown bag method {method!r}")
 
 

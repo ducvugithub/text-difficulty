@@ -1,9 +1,17 @@
 # text-difficulty
 
-- `data/` — raw inputs (train/valid/test CSVs, `finnish_vocab.txt` frequency list). Read-only.
-- `vocab-diff/` — word-level difficulty. Produces the cleaned frequency list + other word signals.
-- `grammar-diff/` — syntactic / morphological complexity signals.
-- `cognitive-diff/` — processing-load signals (discourse, density, surprisal).
-- `text-diff/` — document-level models. text-diff = vocab + grammar + cognitive; consumes the three signal dirs.
+- `data/` — raw inputs (train/valid/test CSVs, `finnish_vocab.txt` frequency list). Local only, git-ignored.
+- `vocab-diff/` — word-level difficulty: the cleaned frequency list (`scripts/`, `vocab-freq/`) and `vocab_construct.py` (`VocabDiffFeatureConstruct`).
+- `grammar-diff/`, `cognitive-diff/` — syntactic / morphological and processing-load signals (constructs to come).
+- `base.py` — `TextAnalysis` (texts + shared preprocessing, computed once) and the `FeatureConstruct` base class.
+- `builder.py` — `TextDiffFeaturesConstruct`: builds the features of any subset of categories.
+- `docs/features.md` — every feature, its category and status.
+- `outputs/` — generated feature tables (git-ignored).
 
-Dependency order: vocab-diff -> (grammar-diff, cognitive-diff) -> text-diff/{feature-curated-based,bert-based}.
+```python
+builder = TextDiffFeaturesConstruct(configs={"vocab": {"bag_method": "uniform_cumfreq_bin"}})
+features = builder.build(TextAnalysis(df), category=["vocab"])   # default: every available category
+```
+
+text difficulty = vocab + grammar + cognitive. Dependency order: vocab-diff list cleaning -> `VocabDiffFeatureConstruct` -> builder.
+Setup: `python -m venv .venv && .venv/bin/pip install -r requirements.txt`; `voikkospell` on PATH.

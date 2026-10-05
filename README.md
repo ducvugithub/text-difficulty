@@ -9,7 +9,7 @@
 - `outputs/` — generated feature tables (git-ignored).
 
 ```python
-builder = TextDiffFeaturesConstruct(configs={"vocab": {"bag_method": "uniform_cumfreq_bin"}})
+builder = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": "log10_freq_bin", "stem_bin_method": "uniform_cumfreq_bin"}})
 features = builder.build(TextAnalysis(df), category=["vocab"])   # default: every available category
 ```
 

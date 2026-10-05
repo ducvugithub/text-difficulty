@@ -1,14 +1,17 @@
 """VocabDiffFeatureConstruct: word-level difficulty features of a text.
 
-Two sets of frequency-bag features, built side by side so they can be compared:
-  stem level   a word's bag is the bag of its rarest known STEM (työ, paikka, ostaa): a compound is as hard as its hardest part
-  lemma level  a word's bag is the bag of its own LEMMA
-Bags: 1 = most frequent ... highest = rarest. Per level:
-  {stem|lemma}_OOV_coverage     share of counted words that are unknown: not recognised by Voikko, or recognised but not in the list
-  {stem|lemma}_bag_{k}_coverage share of counted words in bag k
-  mean_log_{stem|lemma}_freq    mean log10 count of the word's rarest known stem / of the word's lemma (words in the list only)
-Shared: borrowed_coverage = share of words whose stems are all English-looking (removed in step 5); they are not OOV.
-Shares are over the counted words: names and abbreviations are skipped.
+Two sets of frequency-bin features, built side by side so they can be compared. Bin type and number of bins are set
+per level: VocabDiffFeatureConstruct(lemma_bin_method="log10_freq_bin", stem_bin_method="uniform_cumfreq_bin",
+lemma_n_bins=10, stem_n_bins=10); bin types: uniform_rank_bin, uniform_cumfreq_bin, log10_freq_bin (see step 6).
+Bins: 1 = most frequent ... highest = rarest.
+  lemma level  each word is placed by the count of its own LEMMA
+  stem level   each word is split into its STEMS (työ + paikka) and every stem is placed by its own stem count;
+               a word with two stems is two units, a word Voikko does not recognise is one unit
+Per level, shares are over the counted units (names and abbreviations are skipped):
+  {level}_OOV_coverage        unknown: a word Voikko does not recognise, or a lemma / stem that is not in the list
+  {level}_borrowed_coverage   English-looking: lemma / stems removed in step 5 (not OOV)
+  {level}_bag_{k}_coverage    in bin k
+  mean_log_{level}_freq       mean log10 count of the units in a bin
 Other features (definitions in docs/features.md):
   lexical diversity     n_unique_lemmas, ttr_lemma_200
   word form             avg_word_length, long_word_ratio
@@ -45,18 +48,21 @@ LEVELS = ("stem", "lemma")
 class VocabDiffFeatureConstruct(FeatureConstruct):
     category = "vocab"
 
-    def __init__(self, bag_method: str = "uniform_cumfreq_bin"):
-        self.bag_method = bag_method
+    def __init__(self, lemma_bin_method: str = "log10_freq_bin", stem_bin_method: str = "uniform_cumfreq_bin",
+                 lemma_n_bins: int = 10, stem_n_bins: int = 10):
+        """Bin type and number of bins are set per level. n_bins is the maximum: log10_freq_bin gives one bin per
+        decade (9 for this data) and merges the rarest decades into the last bin when n_bins is smaller."""
+        self.bin_methods = {"lemma": lemma_bin_method, "stem": stem_bin_method}
+        self.n_bins = {"lemma": lemma_n_bins, "stem": stem_n_bins}
         lemmas_desc, self.freq = {}, {}
         lemmas_desc["lemma"], self.freq["lemma"] = load_lemma_list("freq")
         lemmas_desc["stem"], self.freq["stem"] = load_stem_list()
-        self.bags = {lv: assign_bags(lemmas_desc[lv], self.freq[lv], bag_method) for lv in LEVELS}
+        self.bags = {lv: assign_bags(lemmas_desc[lv], self.freq[lv], self.bin_methods[lv], self.n_bins[lv]) for lv in LEVELS}
         self.n_bags = {lv: max(self.bags[lv].values()) for lv in LEVELS}
         self.bag_columns = {lv: [f"{lv}_bag_{b}_coverage" for b in range(1, self.n_bags[lv] + 1)] for lv in LEVELS}
         self.borrowed = load_borrowed_stems()
-        self.feature_names = ["borrowed_coverage",
-                              "stem_OOV_coverage", *self.bag_columns["stem"], "mean_log_stem_freq",
-                              "lemma_OOV_coverage", *self.bag_columns["lemma"], "mean_log_lemma_freq", *TEXT_FEATURES]
+        self.feature_names = [name for lv in ("stem", "lemma") for name in
+                              (f"{lv}_OOV_coverage", f"{lv}_borrowed_coverage", *self.bag_columns[lv], f"mean_log_{lv}_freq")] + TEXT_FEATURES
 
     def build(self, analysis: TextAnalysis) -> pd.DataFrame:
         return self.build_with_tallies(analysis)[0]
@@ -73,11 +79,11 @@ class VocabDiffFeatureConstruct(FeatureConstruct):
                 pd.DataFrame(tallies, index=analysis.df.index))
 
     def _token_info(self, tok, status, readings):
-        """Everything one token contributes: its lemma, reading, and how it counts at the stem and lemma level."""
-        info = {"lemma": tok.lower(), "reading": None,
-                "stem": ("unrecognised", 0, 0.0), "lemma_level": ("unrecognised", 0, 0.0)}
+        """What one token contributes: its lemma, reading, one lemma-level unit and its stem-level units.
+        A unit is (kind, bin, log10 count); kind is bag / borrowed / unlisted / unrecognised / skipped."""
+        info = {"lemma": tok.lower(), "reading": None, "lemma_unit": ("unrecognised", 0, 0.0), "stem_units": [("unrecognised", 0, 0.0)]}
         if status in ("name", "abbrev"):
-            info.update(lemma=readings[0][0].lower(), stem=("skipped", 0, 0.0), lemma_level=("skipped", 0, 0.0))
+            info.update(lemma=readings[0][0].lower(), lemma_unit=("skipped", 0, 0.0), stem_units=[])
             return info
         if status != "ok":
             return info
@@ -85,16 +91,19 @@ class VocabDiffFeatureConstruct(FeatureConstruct):
         reading = next((r for r in readings if r[0].lower() == listed), readings[0])
         stems = [s.replace("=", "") for s in reading[2]]
         stems = [s for s in stems if s and not s[:1].isupper()] or [reading[0].lower()]
-        known = [s for s in stems if s in self.bags["stem"]]
         info.update(lemma=reading[0].lower(), reading=reading)
-        if known:
-            info["stem"] = ("bag", max(self.bags["stem"][s] for s in known), math.log10(min(self.freq["stem"][s] for s in known)))
-        else:
-            info["stem"] = ("borrowed" if any(s in self.borrowed for s in stems) else "unlisted", 0, 0.0)
+        units = []
+        for s in stems:
+            if s in self.bags["stem"]:
+                units.append(("bag", self.bags["stem"][s], math.log10(self.freq["stem"][s])))
+            else:
+                units.append(("borrowed" if s in self.borrowed else "unlisted", 0, 0.0))
+        info["stem_units"] = units
         if listed is not None:
-            info["lemma_level"] = ("bag", self.bags["lemma"][listed], math.log10(self.freq["lemma"][listed]))
+            info["lemma_unit"] = ("bag", self.bags["lemma"][listed], math.log10(self.freq["lemma"][listed]))
         else:  # not in the lemma list: removed as English-looking, or unknown
-            info["lemma_level"] = ("borrowed" if info["stem"][0] == "borrowed" else "unlisted", 0, 0.0)
+            all_borrowed = all(kind == "borrowed" for kind, _, _ in units)
+            info["lemma_unit"] = ("borrowed" if all_borrowed else "unlisted", 0, 0.0)
         return info
 
     def _text_row(self, tokens, info):
@@ -105,28 +114,29 @@ class VocabDiffFeatureConstruct(FeatureConstruct):
         for tok in tokens:
             t = info[tok]
             lemmas.append(t["lemma"])
-            for lv, key in (("stem", "stem"), ("lemma", "lemma_level")):
-                kind, bag, logf = t[key]
-                tally[lv][kind] += 1
-                if kind == "bag":
-                    bag_counts[lv][bag] += 1
-                    logfs[lv].append(logf)
+            for lv, units in (("stem", t["stem_units"]), ("lemma", [t["lemma_unit"]])):
+                for kind, bag, logf in units:
+                    tally[lv][kind] += 1
+                    if kind == "bag":
+                        bag_counts[lv][bag] += 1
+                        logfs[lv].append(logf)
             if t["reading"] is not None and t["reading"][1] in CONTENT_CLASSES:
                 content.append((tok.lower(), t["reading"]))
 
-        counted = len(tokens) - tally["stem"]["skipped"]
         n_content = len(content)
         window = lemmas[:TTR_WINDOW]
         compounds = [r for _, r in content if len(r[2]) >= 2]
         ratio = lambda k: k / n_content if n_content else 0.0
-        share = lambda k: k / counted if counted else 0.0
         llinen = sum(any(s.endswith(">+nen") and s.startswith("lli") for s in r[3]) for _, r in content)
         ton = sum(any(s.endswith(">+ton") for s in r[3]) for _, r in content)
         minen = sum(r[1] == "teonsana" and tok.endswith(MINEN_ENDINGS) for tok, r in content)
         sti = sum(r[1] == "laatusana" and tok.endswith("sti") and r[0].lower() != tok and not r[0].endswith("sti") for tok, r in content)
-        row = {"borrowed_coverage": share(tally["stem"]["borrowed"])}
+        row = {}
         for lv in LEVELS:
+            counted = sum(v for k, v in tally[lv].items() if k != "skipped")
+            share = lambda k: k / counted if counted else 0.0
             row[f"{lv}_OOV_coverage"] = share(tally[lv]["unrecognised"] + tally[lv]["unlisted"])
+            row[f"{lv}_borrowed_coverage"] = share(tally[lv]["borrowed"])
             row.update({f"{lv}_bag_{b}_coverage": share(bag_counts[lv][b]) for b in range(1, self.n_bags[lv] + 1)})
             row[f"mean_log_{lv}_freq"] = float(np.mean(logfs[lv])) if logfs[lv] else 0.0
         row.update({
@@ -142,7 +152,7 @@ class VocabDiffFeatureConstruct(FeatureConstruct):
             "deriv_minen_ratio": ratio(minen),
             "deriv_sti_ratio": ratio(sti),
         })
-        tally_row = {"all": len(tokens), "skipped": tally["stem"]["skipped"], "borrowed": tally["stem"]["borrowed"]}
+        tally_row = {"words": len(tokens), "skipped": tally["lemma"]["skipped"]}
         for lv in LEVELS:
-            tally_row.update({f"{lv}_unrecognised": tally[lv]["unrecognised"], f"{lv}_unlisted": tally[lv]["unlisted"], f"{lv}_in_bag": tally[lv]["bag"]})
+            tally_row.update({f"{lv}_{k}": tally[lv][k] for k in ("unrecognised", "unlisted", "borrowed", "bag")})
         return row, tally_row

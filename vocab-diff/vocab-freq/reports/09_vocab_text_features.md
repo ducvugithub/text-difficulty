@@ -1,15 +1,16 @@
 # 09 vocab text features
 
-Built by `VocabDiffFeatureConstruct` (stem bags, bag method uniform_cumfreq_bin). Definitions in `docs/features.md`. `-minen` and `-sti` are heuristics (Voikko does not mark them as derivations). Lemmas are context-free (see the TODO in CLEANUP_SUMMARY.md). The `stem_bag_k_coverage` / `lemma_bag_k_coverage` columns are in the CSVs but not listed here.
+Built by `VocabDiffFeatureConstruct` (lemma bins log10_freq_bin/10, stem bins uniform_cumfreq_bin/10). Definitions in `docs/features.md`. `-minen` and `-sti` are heuristics (Voikko does not mark them as derivations). Lemmas are context-free (see the TODO in CLEANUP_SUMMARY.md). The `stem_bag_k_coverage` / `lemma_bag_k_coverage` columns are in the CSVs but not listed here.
 
 Spearman correlation with the difficulty label (train); more extreme = stronger relationship.
 
 | feature | rho all rows | rho finnish-native-only |
 |---|---:|---:|
-| borrowed_coverage | +0.165 | +0.192 |
-| stem_OOV_coverage | +0.063 | +0.245 |
-| mean_log_stem_freq | -0.305 | -0.192 |
+| stem_OOV_coverage | +0.048 | +0.233 |
+| stem_borrowed_coverage | +0.215 | +0.252 |
+| mean_log_stem_freq | -0.305 | -0.172 |
 | lemma_OOV_coverage | +0.077 | +0.278 |
+| lemma_borrowed_coverage | +0.164 | +0.193 |
 | mean_log_lemma_freq | -0.453 | -0.376 |
 | n_unique_lemmas | +0.412 | +0.360 |
 | ttr_lemma_200 | -0.200 | +0.303 |
@@ -27,10 +28,11 @@ Spearman correlation with the difficulty label (train); more extreme = stronger 
 
 | feature | train | valid | test |
 |---|---:|---:|---:|
-| borrowed_coverage | 0.044 | 0.043 | 0.042 |
-| stem_OOV_coverage | 0.052 | 0.057 | 0.039 |
-| mean_log_stem_freq | 6.530 | 6.534 | 6.458 |
+| stem_OOV_coverage | 0.049 | 0.053 | 0.035 |
+| stem_borrowed_coverage | 0.050 | 0.048 | 0.054 |
+| mean_log_stem_freq | 6.533 | 6.536 | 6.457 |
 | lemma_OOV_coverage | 0.051 | 0.056 | 0.038 |
+| lemma_borrowed_coverage | 0.044 | 0.042 | 0.042 |
 | mean_log_lemma_freq | 6.186 | 6.199 | 5.990 |
 | n_unique_lemmas | 85.541 | 82.564 | 162.132 |
 | ttr_lemma_200 | 0.744 | 0.734 | 0.609 |

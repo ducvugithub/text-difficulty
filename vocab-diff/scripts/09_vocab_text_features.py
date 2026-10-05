@@ -16,19 +16,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from base import ROOT, TextAnalysis  # noqa: E402
 from builder import TextDiffFeaturesConstruct  # noqa: E402
 from common import ensure_dirs, write_report  # noqa: E402
-from text_common import SPLIT_FILES, load_split  # noqa: E402
+from text_common import BAG_METHODS, SPLIT_FILES, load_split  # noqa: E402
 
 OUT_DIR = ROOT / "outputs"
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--bag-method", default="uniform_cumfreq_bin")
+    ap.add_argument("--lemma-bin-method", default="log10_freq_bin", choices=BAG_METHODS)
+    ap.add_argument("--stem-bin-method", default="uniform_cumfreq_bin", choices=BAG_METHODS)
+    ap.add_argument("--lemma-n-bins", type=int, default=10)
+    ap.add_argument("--stem-n-bins", type=int, default=10)
     args = ap.parse_args()
     ensure_dirs()
     OUT_DIR.mkdir(exist_ok=True)
 
-    builder = TextDiffFeaturesConstruct(configs={"vocab": {"bag_method": args.bag_method}})
+    builder = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": args.lemma_bin_method, "stem_bin_method": args.stem_bin_method, "lemma_n_bins": args.lemma_n_bins, "stem_n_bins": args.stem_n_bins}})
 
     frames, feats = {}, {}
     for split in SPLIT_FILES:
@@ -42,7 +45,7 @@ def main():
     df, f = frames["train"], feats["train"]
     native = (df["origine"] == "Real").to_numpy()
     lines = ["# 09 vocab text features", "",
-             f"Built by `VocabDiffFeatureConstruct` (stem bags, bag method {args.bag_method}). "
+             f"Built by `VocabDiffFeatureConstruct` (lemma bins {args.lemma_bin_method}/{args.lemma_n_bins}, stem bins {args.stem_bin_method}/{args.stem_n_bins}). "
              "Definitions in `docs/features.md`. `-minen` and `-sti` are heuristics (Voikko does not mark them as derivations). "
              "Lemmas are context-free (see the TODO in CLEANUP_SUMMARY.md). The `stem_bag_k_coverage` / `lemma_bag_k_coverage` columns are in the CSVs but not listed here.",
              "", "Spearman correlation with the difficulty label (train); more extreme = stronger relationship.", "",

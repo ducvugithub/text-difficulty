@@ -1,11 +1,11 @@
 """Step 8: which bag method and level (stem or lemma bags) separates difficulty best?
 
-For each bag method and each level (stem: a word's bag is its rarest known stem; lemma: its own lemma), build the vocab
+For each bag method and each level (stem: every stem of a word is a unit; lemma: the word's own lemma), build the vocab
 features on a sample (VocabDiffFeatureConstruct) and report the Spearman correlation with the difficulty label of:
-  mean_log_freq        mean log10 count of the word's rarest known stem / of its lemma (higher = easier words, expect negative)
+  mean_log_freq        mean log10 count of the stems / of the lemmas in a bin (higher = easier words, expect negative)
   OOV_coverage         share of unknown words (expect positive)
   mean_bag             average bag number of the words that are in a bag (bag 1 = most frequent, so higher = rarer words, expect positive)
-  borrowed_coverage    share of English-looking words (easy for English speakers, expect negative)
+  borrowed_coverage    share of English-looking units (easy for English speakers, expect negative)
 Shown for all rows and for Finnish-native-only rows.
 
 Output: reports/08_compare_variants.md
@@ -46,7 +46,7 @@ def main():
              f"At most {args.sample or 'all'} texts per subset are sampled. mean_bag is over the words that are in a bag.", "",
              "| level | subset | texts | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag | rho borrowed_coverage |", "|---|---|---:|---|---:|---:|---:|---:|"]
     for method in BAG_METHODS:
-        construct = TextDiffFeaturesConstruct(configs={"vocab": {"bag_method": method}}).constructs["vocab"]
+        construct = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": method, "stem_bin_method": method}}).constructs["vocab"]
         for name, analysis in analyses.items():
             feats = construct.build(analysis)
             label = analysis.df["label"].to_numpy()
@@ -54,7 +54,7 @@ def main():
                 cov = feats[construct.bag_columns[lv]].to_numpy()
                 weights = np.arange(1, construct.n_bags[lv] + 1)
                 mean_bag = (cov * weights).sum(axis=1) / np.where(cov.sum(axis=1) == 0, 1, cov.sum(axis=1))
-                rho = [spearmanr(x, label).statistic for x in (feats[f"mean_log_{lv}_freq"], feats[f"{lv}_OOV_coverage"], mean_bag, feats["borrowed_coverage"])]
+                rho = [spearmanr(x, label).statistic for x in (feats[f"mean_log_{lv}_freq"], feats[f"{lv}_OOV_coverage"], mean_bag, feats[f"{lv}_borrowed_coverage"])]
                 lines.append(f"| {lv} | {name} | {len(analysis.df):,} | {method} | {rho[0]:+.3f} | {rho[1]:+.3f} | {rho[2]:+.3f} | {rho[3]:+.3f} |")
         print(f"{method} done")
     write_report("08_compare_variants.md", lines)

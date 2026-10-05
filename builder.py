@@ -1,6 +1,6 @@
 """TextDiffFeaturesConstruct: build text-difficulty features from the per-category constructs.
 
-    builder = TextDiffFeaturesConstruct(configs={"vocab": {"bag_method": "uniform_cumfreq_bin"}})   # configs: constructor kwargs per category
+    builder = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": "log10_freq_bin", "stem_bin_method": "uniform_cumfreq_bin"}})   # configs: constructor kwargs per category
     features = builder.build(TextAnalysis(df), category=["vocab"])                    # default: every available category
 
 Each category lives in its own directory (vocab-diff/, grammar-diff/, cognitive-diff/) as a FeatureConstruct subclass.
@@ -25,7 +25,7 @@ CONSTRUCTS = {
 
 class TextDiffFeaturesConstruct:
     def __init__(self, configs: dict[str, dict] | None = None):
-        """`configs` maps a category to the keyword arguments of its construct, e.g. {"vocab": {"bag_method": "log10_freq_bin"}}."""
+        """`configs` maps a category to the keyword arguments of its construct, e.g. {"vocab": {"stem_n_bins": 8}}."""
         configs = configs or {}
         self.constructs: dict[str, FeatureConstruct] = {}
         for category, (module, cls) in CONSTRUCTS.items():

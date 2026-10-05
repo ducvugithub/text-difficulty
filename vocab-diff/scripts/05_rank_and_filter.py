@@ -10,7 +10,7 @@ Lemma rule (--lemma-rule): a lemma is dropped when all of its stems are tagged (
 The English translations come from a one-time Wiktionary fetch cached in cleaned/05_translations.tsv (wiktionary.py).
 
 Input : cleaned/04_lemmas_stem.tsv, cleaned/04_stems.tsv, cleaned/03_lemmas.tsv, cleaned/05_translations.tsv (fetched if missing)
-Output: cleaned/05_lemma_freq.tsv  (rank, lemma, class, n_stems, n_forms, freq, rarest_stem_freq)       final lemma list
+Output: cleaned/05_lemma_freq.tsv  (rank, lemma, class, n_stems, n_forms, freq)       final lemma list
         cleaned/05_stem_freq.tsv   (rank, stem, freq, standalone_freq, n_lemmas, n_compounds)            final stem list
         cleaned/05_stem_borrowing.tsv (stem, freq, english, edit_score, norm, borrowed, reason, etymology)  audit of every stem that has an English gloss or is tagged, tagged ones first (by freq)
         reports/05_rank_and_filter.md
@@ -22,7 +22,7 @@ from common import CLEANED, ensure_dirs, write_report
 from english_borrowing import MAX_NORM, MIN_LENGTH, edit_score, looks_english, norm_score
 from wiktionary import ensure_translations
 
-LEMMA_COLS = ["lemma", "class", "n_stems", "n_forms", "freq", "rarest_stem_freq"]
+LEMMA_COLS = ["lemma", "class", "n_stems", "n_forms", "freq"]
 # team sheet: Finnish, English, the sheet's edit score and norm
 SHEET_BORROWED = [("banana", "banana", 0, 0.0), ("presidentti", "president", 0.4, 3.6), ("vitamiini", "vitamin", 0.4, 4.4),
                   ("fysiikka", "physics", 0.4, 5.0), ("koreografia", "choreography", 0.6, 5.5), ("psykologia", "psychology", 0.4, 4.0),
@@ -62,8 +62,7 @@ def stems_of(lemma, stem_field):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--lemma-rule", default="all", choices=["all", "any", "none"])
-    ap.add_argument("--sort-by", default="freq", choices=["freq", "rarest_stem_freq"])
-    ap.add_argument("--min-freq", type=float, default=0, help="drop lemmas below this value of --sort-by (default 0 = keep all)")
+    ap.add_argument("--min-freq", type=float, default=0, help="drop lemmas below this freq (default 0 = keep all)")
     ap.add_argument("--keep-borrowed", action="store_true", help="rank only, remove nothing")
     ap.add_argument("--refetch", action="store_true", help="download the Wiktionary translations again")
     args = ap.parse_args()
@@ -97,7 +96,7 @@ def main():
     # final lemma list
     with open(CLEANED / "04_lemmas_stem.tsv", encoding="utf-8") as fh:
         rows = [line.rstrip("\n").split("\t") for line in fh]
-    key = LEMMA_COLS.index(args.sort_by)
+    key = LEMMA_COLS.index("freq")
     total_freq = sum(int(r[4]) for r in rows)
     removed = [r for r in rows if r[0] in drop_lemmas]
     kept = sorted((r for r in rows if r[0] not in drop_lemmas and float(r[key]) >= args.min_freq), key=lambda r: -float(r[key]))
@@ -144,7 +143,7 @@ def main():
         f"| before | {len(rows):,} |",
         f"| removed as English-looking | {len(removed):,} ({100 * sum(int(r[4]) for r in removed) / total_freq:.2f}% of all lemma counts) |",
         f"| removed by --min-freq {args.min_freq:g} | {n_minfreq:,} |",
-        f"| **in the final list** (`05_lemma_freq.tsv`, sorted by {args.sort_by}) | **{len(kept):,}** |",
+        f"| **in the final list** (`05_lemma_freq.tsv`, sorted by freq) | **{len(kept):,}** |",
         "",
         "Columns of `05_lemma_freq.tsv`:",
         "- `rank`: position (1 = most frequent)",
@@ -153,7 +152,6 @@ def main():
         "- `n_stems`: number of stems",
         "- `n_forms`: forms merged into the lemma",
         "- `freq`: all forms added up",
-        "- `rarest_stem_freq`: the `freq` of the rarest stem for compounds (= `freq` otherwise)",
         "",
         "Columns of `05_stem_freq.tsv`:",
         "- `rank`: position by `freq`",

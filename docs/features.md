@@ -12,7 +12,7 @@ Status: **done** = implemented here for all splits, **todo** = not implemented y
 
 | feature | meaning | status |
 |---|---|---|
-| `stem_*` and `lemma_*`: `{level}_OOV_coverage`, `{level}_bag_k_coverage`, `mean_log_{level}_freq`; shared `borrowed_coverage` | share of unknown words / of words per frequency bag (1 = most frequent) / English-looking words; stem level: a word's bag is its rarest known stem, lemma level: its own lemma | done (step 7, `VocabDiffFeatureConstruct`) |
+| `stem_*` and `lemma_*`: `{level}_OOV_coverage`, `{level}_borrowed_coverage`, `{level}_bag_k_coverage`, `mean_log_{level}_freq` | share of unknown units / of English-looking units / of units per frequency bin (1 = most frequent); stem level: every stem of a word is a unit placed by its own stem count, lemma level: the word is placed by its lemma | done (step 7, `VocabDiffFeatureConstruct`) |
 | `n_unique_lemmas` | distinct lemmas in the text (grows with text length) | done (step 9) |
 | `ttr_lemma_200` | distinct lemmas among the first 200 lemmas / 200 (length-controlled diversity) | done (step 9) |
 | `avg_word_length` | mean characters per word | done (step 9) |

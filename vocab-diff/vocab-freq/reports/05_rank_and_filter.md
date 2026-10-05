@@ -28,7 +28,6 @@ Columns of `05_lemma_freq.tsv`:
 - `n_stems`: number of stems
 - `n_forms`: forms merged into the lemma
 - `freq`: all forms added up
-- `rarest_stem_freq`: the `freq` of the rarest stem for compounds (= `freq` otherwise)
 
 Columns of `05_stem_freq.tsv`:
 - `rank`: position by `freq`

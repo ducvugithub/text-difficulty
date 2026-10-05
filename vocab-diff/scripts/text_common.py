@@ -7,7 +7,7 @@ import pandas as pd
 from common import CLEANED, DATA, NAME_CLASSES, WORD_RE, decode_readings, run_voikko, select_readings
 
 SPLIT_FILES = {"train": "Fi_train.csv", "valid": "Fi_valid.csv", "test": "Fi_test.csv"}
-LIST_COLS = ["rank", "lemma", "class", "n_stems", "n_forms", "freq", "rarest_stem_freq"]
+LIST_COLS = ["rank", "lemma", "class", "n_stems", "n_forms", "freq"]
 N_BAGS = 10
 MAX_TOKEN_LEN = 45  # same cut-off as 01_normalize
 CHUNK = 50_000

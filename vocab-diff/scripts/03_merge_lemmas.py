@@ -81,13 +81,13 @@ def main():
 
     lines = [
         "# 03 merge lemmas",
-        f"- surface forms kept: {kept_rows:,} ({kept_tokens:,} tokens) -> {len(lemmas):,} lemmas ({out_path.name})",
+        f"- surface forms kept: {kept_rows:,} (total count {kept_tokens:,}) -> {len(lemmas):,} lemmas ({out_path.name})",
         "- ambiguous forms count in full for every distinct lemma",
         "",
         "Columns of 03_lemmas.tsv: `lemma` dictionary form; `class` Voikko word class; `stems` stems it is built from "
         "(`+`-joined); `n_forms` inflected forms merged into the lemma; `freq` all those forms' counts added up.",
         "",
-        "| dropped | rows | tokens | most frequent examples |",
+        "| dropped | rows | total count | most frequent examples |",
         "|---|---:|---:|---|",
     ]
     for status, (rows, tokens, examples) in sorted(dropped.items(), key=lambda kv: -kv[1][1]):
@@ -96,8 +96,8 @@ def main():
         lines += [
             "",
             "## English check on unrecognised forms",
-            f"- unrecognised forms found in {ENGLISH_DICT} (len>=3): {english_rows:,} rows, {english_tokens:,} tokens",
-            "- English tokens are already removed by Voikko recognition; recognised English-looking lemmas (sauna, radio...) "
+            f"- unrecognised forms found in {ENGLISH_DICT} (len>=3): {english_rows:,} rows, total count {english_tokens:,}",
+            "- English words are already removed by Voikko recognition; recognised English-looking lemmas (sauna, radio...) "
             "are real Finnish loanwords and are deliberately kept.",
             "- review 03_unrecognised.tsv (column 3 = 'en' if in the English dictionary) for Finnish words Voikko misses.",
         ]

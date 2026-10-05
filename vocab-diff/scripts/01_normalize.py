@@ -1,4 +1,4 @@
-"""Step 1: drop tokens that cannot be words (numbers, symbols, URLs, fragments, absurdly long).
+"""Step 1: drop entries that cannot be words (numbers, symbols, URLs, fragments, absurdly long).
 
 Input : data/finnish_vocab.txt          ('count word' per line, raw surface forms)
 Output: cleaned/01_normalized.tsv       ('count<TAB>word'), reports/01_normalize.md
@@ -60,11 +60,11 @@ def main():
 
     lines = [
         "# 01 normalize",
-        f"- rows in: {rows_in:,} ({tokens_in:,} tokens), malformed lines skipped: {malformed:,}",
-        f"- rows out: {rows_out:,} ({tokens_out:,} tokens) -> {out_path.name}",
+        f"- rows in: {rows_in:,} (total count {tokens_in:,}), malformed lines skipped: {malformed:,}",
+        f"- rows out: {rows_out:,} (total count {tokens_out:,}) -> {out_path.name}",
         f"- min-count: {args.min_count}",
         "",
-        "| reason | rows | tokens | most frequent examples |",
+        "| reason | rows | total count | most frequent examples |",
         "|---|---:|---:|---|",
     ]
     for reason, (rows, tokens, examples) in sorted(stats.items(), key=lambda kv: -kv[1][0]):

@@ -2,9 +2,26 @@
 - lemmas: 6,459,885; compounds (>=2 stems): 6,126,323
 - compounds whose freq changed: 5,775,354; with a stem missing standalone (own freq caps them): 350,873
 
-Columns of 04_lemmas_stem.tsv: `lemma`; `class` Voikko word class; `n_stems` number of stems (>=2 = compound); `n_forms` inflected forms merged into the lemma; `freq` all its forms added up (from step 3); `rarest_stem_freq` = `freq` of the compound's rarest stem (= `freq` for non-compounds).
+Columns of `04_lemmas_stem.tsv`:
+- `lemma`
+- `class`: Voikko word class
+- `n_stems`: number of stems (2 or more = compound)
+- `n_forms`: inflected forms merged into the lemma
+- `freq`: all its forms added up (from step 3)
+- `rarest_stem_freq`: the `freq` of the compound's rarest stem (= `freq` for non-compounds)
 
-Also written: `04_stems.tsv` (26,211 distinct lowercase stems; `stem`; `freq` full count = the `freq` of every lemma containing the stem, added up; `standalone_freq` the `freq` of the lemma equal to the stem, empty if it never occurs as its own word; `n_lemmas` lemmas containing it; `n_compounds` compounds containing it) and `04_compound_stems.tsv` (`compound`, `stem`, `stem_freq`: one row per compound x stem, to audit the rarest-stem rule).
+`04_stems.tsv` (26,211 distinct lowercase stems), columns:
+- `stem`
+- `freq`: full count = the `freq` of every lemma containing the stem, added up
+- `standalone_freq`: the `freq` of the lemma equal to the stem, empty if it never occurs as its own word
+- `n_lemmas`: lemmas containing it
+- `n_compounds`: compounds containing it
+
+`04_compound_stems.tsv`, one row per compound x stem, to audit the rarest-stem rule, columns:
+- `compound`
+- `stem`
+- `stem_freq`: that stem's standalone `freq`
+
 
 ## Largest changes (freq -> rarest_stem_freq)
 | lemma | freq | rarest_stem_freq |

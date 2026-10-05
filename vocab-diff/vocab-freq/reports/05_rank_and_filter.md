@@ -1,13 +1,52 @@
 # 05 rank and filter
-- stems: 26,211 lowercase stems; with a Wiktionary entry: 24,300 (1,911 stems have no Wiktionary entry and stay unjudged); with an English gloss: 19,330
 - English-looking rule: edit score / longer word length x 100 <= 35 (stems of 3+ characters), or etymology `bor:en`; not tagged when the etymology says inherited from Proto-Finnic / Uralic
-- tagged: 5,791 stems (5,727 by edit score, 64 only by etymology); 45 spared by a native etymology
-- `05_stem_freq.tsv`: 20,420 stems ranked by `freq` (full count)
-- `05_lemma_freq.tsv` (lemma rule `all`, sorted by freq, min-freq 0): 6,265,299 lemmas ranked, 194,586 removed as English-looking (4.14% of all lemma counts)
 
-Columns of 05_lemma_freq.tsv: `rank` position (1 = most frequent); `lemma`; `class` Voikko word class; `n_stems` number of stems; `n_forms` forms merged into the lemma; `freq` all forms added up; `rarest_stem_freq` `freq` of the rarest stem for compounds (= `freq` otherwise).
-Columns of 05_stem_freq.tsv: `rank` position by `freq`; `stem`; `freq` full count (the `freq` of every lemma containing the stem, added up); `standalone_freq` the lemma frequency of the stem as its own word (empty if it never occurs alone); `n_lemmas` lemmas containing it; `n_compounds` compounds containing it.
-Columns of 05_stem_borrowing.tsv (only stems with an English gloss; tagged stems first, most frequent first): `stem`; `freq` full count of the stem; `english` closest English gloss; `edit_score` weighted edit distance; `norm` edit score / longer word length x 100; `borrowed` 1 = tagged; `reason` `edit score`, `bor:en`, or `native etymology` (a rule fired but the stem is native, not tagged); `etymology` Wiktionary tags (`bor:sv` borrowed from Swedish, `der:la` derived from Latin, `inh:urj-fin-pro` inherited from Proto-Finnic).
+Stems:
+
+| step | stems |
+|---|---:|
+| all lowercase stems | 26,211 |
+| found in the dictionary (Wiktionary) | 24,300 (1,911 not found: cannot be judged, they stay) |
+| with an English translation | 19,330 (the others cannot be judged, they stay) |
+| tagged as English-looking | 5,791 (5,727 by edit score, 64 only by etymology `bor:en`) |
+| not tagged because the etymology says native | 45 |
+| **in the final list** (`05_stem_freq.tsv`) | **20,420** |
+
+Lemmas (a lemma is removed when all of its stems are tagged):
+
+| step | lemmas |
+|---|---:|
+| before | 6,459,885 |
+| removed as English-looking | 194,586 (4.14% of all lemma counts) |
+| removed by --min-freq 0 | 0 |
+| **in the final list** (`05_lemma_freq.tsv`, sorted by freq) | **6,265,299** |
+
+Columns of `05_lemma_freq.tsv`:
+- `rank`: position (1 = most frequent)
+- `lemma`
+- `class`: Voikko word class
+- `n_stems`: number of stems
+- `n_forms`: forms merged into the lemma
+- `freq`: all forms added up
+- `rarest_stem_freq`: the `freq` of the rarest stem for compounds (= `freq` otherwise)
+
+Columns of `05_stem_freq.tsv`:
+- `rank`: position by `freq`
+- `stem`
+- `freq`: full count (the `freq` of every lemma containing the stem, added up)
+- `standalone_freq`: the lemma frequency of the stem as its own word (empty if it never occurs alone)
+- `n_lemmas`: lemmas containing it
+- `n_compounds`: compounds containing it
+
+Columns of `05_stem_borrowing.tsv` (stems with an English gloss, plus tagged ones; tagged stems first, most frequent first):
+- `stem`
+- `freq`: full count of the stem
+- `english`: closest English gloss
+- `edit_score`: weighted edit distance
+- `norm`: edit score / longer word length x 100
+- `borrowed`: 1 = tagged
+- `reason`: `edit score`, `bor:en`, or `native etymology` (a rule fired but the stem is native, so it is not tagged)
+- `etymology`: Wiktionary tags (`bor:sv` borrowed from Swedish, `der:la` derived from Latin, `inh:urj-fin-pro` inherited from Proto-Finnic)
 
 ## Calibration: the team sheet pairs (tagged when norm <= 35)
 | Finnish | English | sheet edit score | our edit score | sheet norm | our norm | tagged |

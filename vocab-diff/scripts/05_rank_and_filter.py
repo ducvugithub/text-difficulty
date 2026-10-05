@@ -114,27 +114,64 @@ def main():
             dst.write(f"{rank}\t" + "\t".join(row) + "\n")
 
     n_gloss = sum(1 for t in tags.values() if t["english"])
+    n_tagged = sum(t["borrowed"] for t in tags.values())
+    n_by_score = sum(1 for t in tags.values() if t["reason"] == "edit score")
+    n_by_etymology = sum(1 for t in tags.values() if t["reason"] == "bor:en")
+    n_spared = sum(1 for t in tags.values() if t["reason"] == "native etymology")
+    n_minfreq = len(rows) - len(removed) - len(kept)
     border = sorted(((t["norm"], s, t) for s, t in tags.items() if t["norm"] != "" and 25 <= t["norm"] <= 50), key=lambda x: x[0])
     step = max(len(border) // 60, 1)
     lines = [
         "# 05 rank and filter",
-        f"- stems: {len(stems):,} lowercase stems; with a Wiktionary entry: {len(tags):,} ({n_uncached:,} stems have no Wiktionary entry and stay unjudged); with an English gloss: {n_gloss:,}",
-        f"- English-looking rule: edit score / longer word length x 100 <= {MAX_NORM:g} (stems of {MIN_LENGTH}+ characters), or etymology `bor:en`; not tagged when the etymology says inherited from Proto-Finnic / Uralic",
-        f"- tagged: {sum(t['borrowed'] for t in tags.values()):,} stems ({sum(1 for t in tags.values() if t['reason'] == 'edit score'):,} by edit score, "
-        f"{sum(1 for t in tags.values() if t['reason'] == 'bor:en'):,} only by etymology); {sum(1 for t in tags.values() if t['reason'] == 'native etymology'):,} spared by a native etymology"
-        + (" (--keep-borrowed: nothing removed)" if args.keep_borrowed else ""),
-        f"- `05_stem_freq.tsv`: {len(stem_kept):,} stems ranked by `freq` (full count)",
-        f"- `05_lemma_freq.tsv` (lemma rule `{args.lemma_rule}`, sorted by {args.sort_by}, min-freq {args.min_freq:g}): {len(kept):,} lemmas ranked, "
-        f"{len(removed):,} removed as English-looking ({100 * sum(int(r[4]) for r in removed) / total_freq:.2f}% of all lemma counts)",
+        f"- English-looking rule: edit score / longer word length x 100 <= {MAX_NORM:g} (stems of {MIN_LENGTH}+ characters), or etymology `bor:en`; not tagged when the etymology says inherited from Proto-Finnic / Uralic"
+        + ("; --keep-borrowed: nothing removed" if args.keep_borrowed else ""),
         "",
-        "Columns of 05_lemma_freq.tsv: `rank` position (1 = most frequent); `lemma`; `class` Voikko word class; `n_stems` number of stems; "
-        "`n_forms` forms merged into the lemma; `freq` all forms added up; `rarest_stem_freq` `freq` of the rarest stem for compounds (= `freq` otherwise).",
-        "Columns of 05_stem_freq.tsv: `rank` position by `freq`; `stem`; `freq` full count (the `freq` of every lemma containing the stem, added up); "
-        "`standalone_freq` the lemma frequency of the stem as its own word (empty if it never occurs alone); `n_lemmas` lemmas containing it; `n_compounds` compounds containing it.",
-        "Columns of 05_stem_borrowing.tsv (only stems with an English gloss; tagged stems first, most frequent first): `stem`; `freq` full count of the stem; "
-        "`english` closest English gloss; `edit_score` weighted edit distance; `norm` edit score / longer word length x 100; `borrowed` 1 = tagged; "
-        "`reason` `edit score`, `bor:en`, or `native etymology` (a rule fired but the stem is native, not tagged); "
-        "`etymology` Wiktionary tags (`bor:sv` borrowed from Swedish, `der:la` derived from Latin, `inh:urj-fin-pro` inherited from Proto-Finnic).",
+        "Stems:",
+        "",
+        "| step | stems |",
+        "|---|---:|",
+        f"| all lowercase stems | {len(stems):,} |",
+        f"| found in the dictionary (Wiktionary) | {len(tags):,} ({n_uncached:,} not found: cannot be judged, they stay) |",
+        f"| with an English translation | {n_gloss:,} (the others cannot be judged, they stay) |",
+        f"| tagged as English-looking | {n_tagged:,} ({n_by_score:,} by edit score, {n_by_etymology:,} only by etymology `bor:en`) |",
+        f"| not tagged because the etymology says native | {n_spared:,} |",
+        f"| **in the final list** (`05_stem_freq.tsv`) | **{len(stem_kept):,}** |",
+        "",
+        "Lemmas (a lemma is removed when all of its stems are tagged):",
+        "",
+        "| step | lemmas |",
+        "|---|---:|",
+        f"| before | {len(rows):,} |",
+        f"| removed as English-looking | {len(removed):,} ({100 * sum(int(r[4]) for r in removed) / total_freq:.2f}% of all lemma counts) |",
+        f"| removed by --min-freq {args.min_freq:g} | {n_minfreq:,} |",
+        f"| **in the final list** (`05_lemma_freq.tsv`, sorted by {args.sort_by}) | **{len(kept):,}** |",
+        "",
+        "Columns of `05_lemma_freq.tsv`:",
+        "- `rank`: position (1 = most frequent)",
+        "- `lemma`",
+        "- `class`: Voikko word class",
+        "- `n_stems`: number of stems",
+        "- `n_forms`: forms merged into the lemma",
+        "- `freq`: all forms added up",
+        "- `rarest_stem_freq`: the `freq` of the rarest stem for compounds (= `freq` otherwise)",
+        "",
+        "Columns of `05_stem_freq.tsv`:",
+        "- `rank`: position by `freq`",
+        "- `stem`",
+        "- `freq`: full count (the `freq` of every lemma containing the stem, added up)",
+        "- `standalone_freq`: the lemma frequency of the stem as its own word (empty if it never occurs alone)",
+        "- `n_lemmas`: lemmas containing it",
+        "- `n_compounds`: compounds containing it",
+        "",
+        "Columns of `05_stem_borrowing.tsv` (stems with an English gloss, plus tagged ones; tagged stems first, most frequent first):",
+        "- `stem`",
+        "- `freq`: full count of the stem",
+        "- `english`: closest English gloss",
+        "- `edit_score`: weighted edit distance",
+        "- `norm`: edit score / longer word length x 100",
+        "- `borrowed`: 1 = tagged",
+        "- `reason`: `edit score`, `bor:en`, or `native etymology` (a rule fired but the stem is native, so it is not tagged)",
+        "- `etymology`: Wiktionary tags (`bor:sv` borrowed from Swedish, `der:la` derived from Latin, `inh:urj-fin-pro` inherited from Proto-Finnic)",
         "",
         f"## Calibration: the team sheet pairs (tagged when norm <= {MAX_NORM:g})",
         "| Finnish | English | sheet edit score | our edit score | sheet norm | our norm | tagged |", "|---|---|---:|---:|---:|---:|---|",

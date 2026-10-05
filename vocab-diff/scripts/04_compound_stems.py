@@ -74,14 +74,25 @@ def main():
         f"- lemmas: {len(rows):,}; compounds (>=2 stems): {n_compounds:,}",
         f"- compounds whose freq changed: {n_changed:,}; with a stem missing standalone (own freq caps them): {n_missing_stem:,}",
         "",
-        "Columns of 04_lemmas_stem.tsv: `lemma`; `class` Voikko word class; `n_stems` number of stems (>=2 = compound); "
-        "`n_forms` inflected forms merged into the lemma; `freq` all its forms added up (from step 3); "
-        "`rarest_stem_freq` = `freq` of the compound's rarest stem (= `freq` for non-compounds).",
+        "Columns of `04_lemmas_stem.tsv`:",
+        "- `lemma`",
+        "- `class`: Voikko word class",
+        "- `n_stems`: number of stems (2 or more = compound)",
+        "- `n_forms`: inflected forms merged into the lemma",
+        "- `freq`: all its forms added up (from step 3)",
+        "- `rarest_stem_freq`: the `freq` of the compound's rarest stem (= `freq` for non-compounds)",
         "",
-        f"Also written: `04_stems.tsv` ({n_stems:,} distinct lowercase stems; `stem`; `freq` full count = the `freq` of every lemma containing the stem, added up; "
-        f"`standalone_freq` the `freq` of the lemma equal to the stem, empty if it never occurs as its own word; `n_lemmas` lemmas containing it; "
-        f"`n_compounds` compounds containing it) and `04_compound_stems.tsv` "
-        "(`compound`, `stem`, `stem_freq`: one row per compound x stem, to audit the rarest-stem rule).",
+        f"`04_stems.tsv` ({n_stems:,} distinct lowercase stems), columns:",
+        "- `stem`",
+        "- `freq`: full count = the `freq` of every lemma containing the stem, added up",
+        "- `standalone_freq`: the `freq` of the lemma equal to the stem, empty if it never occurs as its own word",
+        "- `n_lemmas`: lemmas containing it",
+        "- `n_compounds`: compounds containing it",
+        "",
+        "`04_compound_stems.tsv`, one row per compound x stem, to audit the rarest-stem rule, columns:",
+        "- `compound`",
+        "- `stem`",
+        "- `stem_freq`: that stem's standalone `freq`",
         "",
         "## Largest changes (freq -> rarest_stem_freq)",
         "| lemma | freq | rarest_stem_freq |",

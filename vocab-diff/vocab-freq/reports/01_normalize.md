@@ -1,9 +1,10 @@
 # 01 normalize
-- rows in: 44,653,808 (3,662,727,698 tokens), malformed lines skipped: 0
-- rows out: 36,096,939 (2,996,677,905 tokens) -> 01_normalized.tsv
+- rows in: 44,653,808 (total count 3,662,727,698), malformed lines skipped: 0
+- rows out: 36,096,939 (total count 2,996,677,905) -> 01_normalized.tsv
+- total count = the `freq` counts of the rows added up, i.e. how often those forms appear in the corpus (not the number of different forms)
 - min-count: 1
 
-| reason | rows | tokens | most frequent examples |
+| reason | rows | total count | most frequent examples |
 |---|---:|---:|---|
 | other_symbols | 4,624,192 | 37,795,344 | &gt (1602158), mm. (1273584), esim. (1082247), :D (757740), ns. (473395), author= (398893), time= (363074), EU:n (360955), §:n (254929), ym. (218285), p&gt (204174), Oy:n (197192), /quote (196248), .fi (159278), ry:n (152920) |
 | contains_digit | 3,120,324 | 70,861,484 | 2 (1678828), 1 (1421927), 3 (1161506), 10 (932359), 5 (884973), 4 (842192), 000 (832231), 2013 (729707), 20 (663801), 2012 (651237), 6 (592935), 2011 (549991), 7 (546191), 2014 (544233), 1. (523021) |

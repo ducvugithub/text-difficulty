@@ -1,20 +1,20 @@
 """Helpers shared by the text-level scripts (07, 08). Needs pandas (see requirements.txt)."""
 import math
+import sys
 from collections import Counter
+from pathlib import Path
 
 import pandas as pd
 
-from common import CLEANED, DATA, NAME_CLASSES, WORD_RE, decode_readings, run_voikko, select_readings
+from common import CLEANED, NAME_CLASSES, WORD_RE, decode_readings, run_voikko, select_readings
 
-SPLIT_FILES = {"train": "Fi_train.csv", "valid": "Fi_valid.csv", "test": "Fi_test.csv"}
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from dataset import SPLIT_FILES, load_split  # noqa: E402,F401  (re-exported for the scripts)
+
 LIST_COLS = ["rank", "lemma", "class", "n_stems", "n_forms", "freq"]
 N_BAGS = 10
 MAX_TOKEN_LEN = 45  # same cut-off as 01_normalize
 CHUNK = 50_000
-
-
-def load_split(split):
-    return pd.read_csv(DATA / f"Source_ Finnish Difficulty texts with features - {SPLIT_FILES[split]}")
 
 
 def token_counts(texts):

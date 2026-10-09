@@ -69,43 +69,45 @@
 ### 5. Rank and filter English-looking words: `05_rank_and_filter.py`
 - **Helpers:** `english_borrowing.py`, `wiktionary.py`
 - **Input:** `cleaned/04_lemmas_stem.tsv`, `04_stems.tsv`, `03_lemmas.tsv`, `05_translations.tsv`
-  - `05_translations.tsv`, columns `stem english etymology`: **one-time fetch** from the Wiktionary Finnish dump (kaikki.org, 4.6 GB streamed, ~20 min, CC BY-SA)
-  - It is downloaded only when the file is missing (`--refetch` redoes it)
-  - `english`: single-word English glosses joined by `|`
-  - `etymology`: tags such as `bor:sv` (borrowed from Swedish), `der:la` (derived from Latin), `inh:urj-fin-pro` (inherited from Proto-Finnic)
+  - **One-time download** of the Wiktionary Finnish dump (kaikki.org, 4.6 GB, ~20 min, CC BY-SA). The entries of our stems are saved in `cleaned/05_wiktionary_entries.jsonl`; `05_translations.tsv` is rebuilt from that file in seconds. The dump is downloaded only when the entries file is missing (`--refetch` redoes it)
+  - `05_translations.tsv`, columns `stem english english_all etymology en_source`
+    - `english`: single-word English translations of the stem's **first meaning** only (a later meaning can be unrelated: puku = suit, but also an antelope)
+    - `english_all`: translations of all meanings, for reference
+    - `etymology`: tags such as `bor:sv` (borrowed from Swedish), `der:la` (derived from Latin), `inh:urj-fin-pro` (inherited from Proto-Finnic); taken from the same entry as the first meaning
+    - `en_source`: the English source word when the etymology says borrowed from English (biisi ← piece)
 - **Output:**
   - `cleaned/05_lemma_freq.tsv`, columns `rank lemma class n_stems n_forms freq`: final lemma list
   - `cleaned/05_stem_freq.tsv`, columns `rank stem freq standalone_freq n_lemmas n_compounds`: final stem list, ranked by `freq`
-  - `cleaned/05_stem_borrowing.tsv`, columns `stem freq english edit_score norm borrowed reason etymology`: audit of the 19,330 stems with an English gloss plus the tagged ones; tagged first, most frequent first
-    - `english`: closest English gloss
-    - `edit_score`: weighted edit distance
-    - `norm`: edit score / longer word length × 100
+  - `cleaned/05_stem_borrowing.tsv`, columns `stem freq english english_from edit_score norm borrowed reason etymology`: audit of every judged stem; tagged first, most frequent first
+    - `english`: the English word the stem was scored against; `english_from`: `translation` (first meaning) or `etymology` (the English source word, for stems tagged only by `bor:en`)
+    - `edit_score`: weighted edit distance; `norm`: edit score / longer word length × 100
     - `borrowed`: 1 = tagged English-looking
-    - `reason`: `edit score`; `bor:en` (etymology says borrowed from English); `native etymology` (rule fired, but the stem is inherited from Proto-Finnic / Uralic, so not tagged)
+    - `reason`: `edit score`; `bor:en` (etymology says borrowed from English); `native etymology` (a rule fired, but the stem is inherited from Proto-Finnic / Uralic, so not tagged)
 - **Steps:**
-  - Edit score from each stem to its closest English gloss
+  - Edit score from the stem to the closest English translation of its first meaning
     - normal edit costs 1
-    - standard modifications Finnish applies when borrowing cost 0.2: final -i, doubled letters (tt/t, ss/s), k/c, f/ph, k/ch, ia/y, ...
-    - cost table: `RULES` in `english_borrowing.py` (from the team sheet)
-  - Tag a stem when `norm` is at most **35**, or its etymology says `bor:en`
+    - standard modifications Finnish applies when borrowing cost 0.2: final -i, doubled letters (tt/t, ss/s), k/c, f/ph, k/ch, ia/y, ... (table: `RULES` in `english_borrowing.py`, from the team sheet)
+    - verb endings (-ta, -tä, -oida, -öidä) cost 0.2 **only for verbs** (English translation "to ..."): the -ta of the noun rotta (rat) is not a verb ending
+  - A translation identical to the stem counts only if it is a real English word (wordfreq Zipf ≥ 2.8): radio, video, internet pass; pulla (the Finnish bun), kerma, raita do not
+  - Tag a stem when `norm` is at most **35**, or when its etymology says `bor:en` (then `english` is the English source word, e.g. kämppä ← camp)
   - Do not tag native stems (inherited from Proto-Finnic / Uralic)
-  - Do not judge: stems under 3 characters, stems without a Wiktionary entry or English gloss
+  - Do not judge: stems under 3 characters, stems without a Wiktionary entry or a translation, capitalised stems
   - Lemma rule `--lemma-rule`: remove a lemma when all its stems are tagged (default), any, or none
-  - Sort lemmas and stems by `freq`; add `rank`
-  - Optional `--min-freq` cut (off by default); `--keep-borrowed` removes nothing
+  - Sort lemmas and stems by `freq`; add `rank`; optional `--min-freq` cut (off by default); `--keep-borrowed` removes nothing
 - **Results:**
 
   | | before | tagged / removed | final |
   |---|---:|---:|---:|
-  | stems | 26,211 | 5,791 | 20,420 |
-  | lemmas | 6,459,885 | 194,586 (4.14% of all lemma counts) | 6,265,299 |
+  | stems | 26,211 | 5,507 | 20,704 |
+  | lemmas | 6,459,885 | 176,702 (3.35% of all lemma counts) | 6,283,183 |
 
-  - Stems: 24,300 found in Wiktionary, 19,330 with an English gloss
-  - Calibration: every borrowed pair of the sheet scores 33.3 or less, every native pair 50 or more; tee / tea (33.3) is the borderline
+  - Stems: 24,337 found in Wiktionary, 19,145 with a translation; of the 5,507 tagged, 5,415 by edit score and 92 only by etymology
+  - Checked by hand: pulla, puku, kissa, rotta, mutta, todeta, kerma are not tagged; kämppä, biisi, tiimi, taksi, okei are tagged by etymology; radio, euro by edit score
+  - Calibration: every borrowed pair of the sheet scores 33.3 or less, every native pair 50 or more (`reports/05_rank_and_filter.md`)
 - **Caveats:**
-  - A tag means "looks like its English translation", not "borrowed from English". It also catches Swedish, Latin and Greek loans and some Germanic cognates
-  - **False positives among frequent words:** "mutta" (16.8M, gloss "but", norm 24.0) and "todeta" (gloss "note") are tagged and removed. They are native, but their etymology has no `inh:` tag. Needs a review of the most frequent tagged stems
-  - About 1,900 stems have no Wiktionary entry and stay in the lists
+  - A tag means "looks like its English translation" or "Wiktionary says borrowed from English". It also catches loans that came through Swedish, Latin or Greek and some Germanic cognates (merkki, linja)
+  - About 1,900 stems have no Wiktionary entry, and others no usable translation; they stay in the lists
+  - The cost table is generous: a short word with two or three 0.2 edits can pass at 35
 
 ### 6. Build bags (stems and lemmas): `06_build_bags.py`
 - **Input:** `cleaned/05_stem_freq.tsv` (20,420 stems), `05_lemma_freq.tsv` (6.27M lemmas)
@@ -150,8 +152,8 @@
 
   | level | units | in bin | borrowed | OOV: Voikko-unknown | OOV: not in list | skipped (% of words) |
   |---|---:|---:|---:|---:|---:|---:|
-  | stem | 1,293,035 | 91.0% | 5.3% | 3.5% | 0.2% | 3.5% |
-  | lemma | 1,183,525 | 91.6% | 4.4% | 3.8% | 0.1% | 3.5% |
+  | stem | 1,292,989 | 91.9% | 4.5% | 3.5% | 0.2% | 3.5% |
+  | lemma | 1,183,525 | 92.4% | 3.7% | 3.8% | 0.1% | 3.5% |
 
   - Per-text-avg-oov (stem / lemma): train all 4.9% / 5.1%; train native 3.6% / 4.0%; test 3.5% / 3.8%
   - Old pipeline: 22.4% (train all), 27.9% (train native)
@@ -167,22 +169,21 @@
 
   | level | subset | bin method | rho mean_log_freq | rho OOV_coverage | rho mean_bag | rho borrowed_coverage |
   |---|---|---|---:|---:|---:|---:|
-  | stem | all | uniform_rank_bin | -0.292 | +0.045 | +0.207 | +0.216 |
-  | lemma | all | uniform_rank_bin | -0.442 | +0.074 | +0.362 | +0.165 |
-  | stem | all | uniform_cumfreq_bin | -0.292 | +0.045 | +0.298 | +0.216 |
-  | lemma | all | uniform_cumfreq_bin | -0.442 | +0.074 | +0.415 | +0.165 |
-  | stem | all | log10_freq_bin | -0.292 | +0.045 | +0.293 | +0.216 |
-  | lemma | all | log10_freq_bin | -0.442 | +0.074 | **+0.447** | +0.165 |
-  | stem | native only | uniform_rank_bin | -0.172 | +0.233 | +0.119 | +0.252 |
-  | lemma | native only | uniform_rank_bin | -0.376 | +0.278 | +0.325 | +0.193 |
-  | stem | native only | uniform_cumfreq_bin | -0.172 | +0.233 | +0.184 | +0.252 |
-  | lemma | native only | uniform_cumfreq_bin | -0.376 | +0.278 | +0.359 | +0.193 |
-  | stem | native only | log10_freq_bin | -0.172 | +0.233 | +0.148 | +0.252 |
-  | lemma | native only | log10_freq_bin | -0.376 | +0.278 | **+0.374** | +0.193 |
+  | stem | all | uniform_rank_bin | -0.293 | +0.045 | +0.208 | +0.260 |
+  | lemma | all | uniform_rank_bin | -0.441 | +0.075 | +0.362 | +0.234 |
+  | stem | all | uniform_cumfreq_bin | -0.293 | +0.045 | +0.297 | +0.260 |
+  | lemma | all | uniform_cumfreq_bin | -0.441 | +0.075 | +0.414 | +0.234 |
+  | stem | all | log10_freq_bin | -0.293 | +0.045 | +0.295 | +0.260 |
+  | lemma | all | log10_freq_bin | -0.441 | +0.075 | **+0.446** | +0.234 |
+  | stem | native only | uniform_rank_bin | -0.168 | +0.233 | +0.121 | +0.213 |
+  | lemma | native only | uniform_rank_bin | -0.373 | +0.278 | +0.323 | +0.199 |
+  | stem | native only | uniform_cumfreq_bin | -0.168 | +0.233 | +0.174 | +0.213 |
+  | lemma | native only | uniform_cumfreq_bin | -0.373 | +0.278 | +0.354 | +0.199 |
+  | stem | native only | log10_freq_bin | -0.168 | +0.233 | +0.145 | +0.213 |
+  | lemma | native only | log10_freq_bin | -0.373 | +0.278 | **+0.370** | +0.199 |
 
-  - Lemma bins beat stem bins in every row: `mean_bag` +0.447 vs +0.298 (all), +0.374 vs +0.184 (native)
+  - Lemma bins beat stem bins in every row: `mean_bag` +0.446 vs +0.297 (all), +0.370 vs +0.174 (native)
   - Best bin method: `log10_freq_bin` for lemmas, `uniform_cumfreq_bin` for stems; `uniform_rank_bin` is the weakest
-  - Counting each stem separately (no "rarest stem") gave about the same stem results as before: +0.298 vs +0.300 (all), +0.184 vs +0.211 (native)
   - `borrowed_coverage` is positive: harder texts have more English-looking units, not fewer
 
 ### 9. Vocab text features: `09_vocab_text_features.py`
@@ -235,7 +236,7 @@ Dropped earlier:
 ## Open points
 - **Stem or lemma bins:** both are built as separate feature sets. Lemma bins correlate better (step 8); the stem bins are meant to add to them, not replace them. Not yet tested together in a model
 - **Names inside stems:** a capitalised stem is dropped, so the counts of its lowercase parts are slightly too low. Not fixed
-- **English filter false positives:** see step 5 caveats ("mutta", "todeta")
+- **English filter:** the cost table is generous, so some stems may still pass by accident; the audit file `05_stem_borrowing.tsv` is the place to check
 - **TODO: context-aware analyser for the text side.** Steps 7-9 use Voikko without context; an ambiguous word gets the candidate lemma with the highest list frequency. Plan: Stanza picks among Voikko's candidates (see below). The step 7-9 numbers will change
 - Spoken Finnish (mun, mä, oon) is dropped as unrecognised and counts as OOV in text
 

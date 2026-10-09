@@ -1,25 +1,25 @@
 # 05 rank and filter
-- English-looking rule: edit score / longer word length x 100 <= 35 (stems of 3+ characters), or etymology `bor:en`; not tagged when the etymology says inherited from Proto-Finnic / Uralic
+- English-looking rule: edit score / longer word length x 100 <= 35 (stems of 3+ characters), or the etymology says `bor:en`; not tagged when the etymology says inherited from Proto-Finnic / Uralic
 
 Stems:
 
 | step | stems |
 |---|---:|
 | all lowercase stems | 26,211 |
-| found in the dictionary (Wiktionary) | 24,300 (1,911 not found: cannot be judged, they stay) |
-| with an English translation | 19,330 (the others cannot be judged, they stay) |
-| tagged as English-looking | 5,791 (5,727 by edit score, 64 only by etymology `bor:en`) |
-| not tagged because the etymology says native | 45 |
-| **in the final list** (`05_stem_freq.tsv`) | **20,420** |
+| found in the dictionary (Wiktionary) | 24,337 (1,874 not found: cannot be judged, they stay) |
+| with an English translation | 19,145 (the others cannot be judged, they stay) |
+| tagged as English-looking | 5,507 (5,415 by edit score, 92 only by etymology `bor:en`) |
+| not tagged because the etymology says native | 13 |
+| **in the final list** (`05_stem_freq.tsv`) | **20,704** |
 
 Lemmas (a lemma is removed when all of its stems are tagged):
 
 | step | lemmas |
 |---|---:|
 | before | 6,459,885 |
-| removed as English-looking | 194,586 (4.14% of all lemma counts) |
+| removed as English-looking | 176,702 (3.35% of all lemma counts) |
 | removed by --min-freq 0 | 0 |
-| **in the final list** (`05_lemma_freq.tsv`, sorted by freq) | **6,265,299** |
+| **in the final list** (`05_lemma_freq.tsv`, sorted by freq) | **6,283,183** |
 
 Columns of `05_lemma_freq.tsv`:
 - `rank`: position (1 = most frequent)
@@ -40,11 +40,12 @@ Columns of `05_stem_freq.tsv`:
 Columns of `05_stem_borrowing.tsv` (stems with an English gloss, plus tagged ones; tagged stems first, most frequent first):
 - `stem`
 - `freq`: full count of the stem
-- `english`: closest English gloss
+- `english`: closest English translation of the stem's first meaning
 - `edit_score`: weighted edit distance
 - `norm`: edit score / longer word length x 100
 - `borrowed`: 1 = tagged
-- `reason`: `edit score`, `bor:en`, or `native etymology` (a rule fired but the stem is native, so it is not tagged)
+- `english_from`: `translation` (first meaning) or `etymology` (the English word the stem was borrowed from, for stems tagged only by `bor:en`)
+- `reason`: `edit score`; `bor:en` (the etymology says borrowed from English); `native etymology` (a rule fired, but the stem is inherited from Proto-Finnic, so not tagged)
 - `etymology`: Wiktionary tags (`bor:sv` borrowed from Swedish, `der:la` derived from Latin, `inh:urj-fin-pro` inherited from Proto-Finnic)
 
 ## Calibration: the team sheet pairs (tagged when norm <= 35)
@@ -76,7 +77,7 @@ Columns of `05_stem_borrowing.tsv` (stems with an English gloss, plus tagged one
 | tsekata | check | 1.6 | 1.6 | 22.9 | 22.9 | yes |
 | tatti | bolete | 6 | 4.2 | 120 | 70.0 | no |
 | käsi | hand | 4 | 4.0 | 100 | 100.0 | no |
-| haluta | want | 5 | 3.2 | 83.3 | 53.3 | no |
+| haluta | want | 5 | 4.0 | 83.3 | 66.7 | no |
 | mennä | go | 5 | 5.0 | 100 | 100.0 | no |
 | tutkimus | research | 8 | 7.2 | 100 | 90.0 | no |
 | jalka | leg | 4 | 4.0 | 80 | 80.0 | no |
@@ -88,71 +89,71 @@ Columns of `05_stem_borrowing.tsv` (stems with an English gloss, plus tagged one
 
 ## Most frequent removed lemmas
 
-mutta (16,836,026), esimerkki (2,982,205), tee (2,298,364), pari (2,297,006), laki (1,712,650), euro (1,634,010), blogi (1,178,205), todeta (1,162,560), prosentti (1,091,613), kommentti (1,042,042), minuutti (899,102), merkittävä (865,887), hotelli (844,590), normaali (757,142), musiikki (729,646), merkki (708,442), historia (683,274), idea (667,838), kurssi (649,226), numero (627,994), artikkeli (613,786), media (567,580), projekti (558,147), energia (530,833), poliisi (520,748), kulttuuri (513,042), materiaali (504,378), versio (490,419), metri (489,600), video (487,188), netti (486,672), merkitty (477,316), lista (471,894), rooli (463,077), tyyli (460,239), linkki (433,447), kissa (415,192), internet (414,143), riski (392,924), kokki (381,467)
+esimerkki (2,982,205), tee (2,298,364), pari (2,297,006), euro (1,634,010), blogi (1,178,205), prosentti (1,091,613), kommentti (1,042,042), minuutti (899,102), merkittävä (865,887), hotelli (844,590), normaali (757,142), musiikki (729,646), merkki (708,442), historia (683,274), idea (667,838), kurssi (649,226), numero (627,994), artikkeli (613,786), media (567,580), projekti (558,147), energia (530,833), poliisi (520,748), aktiivinen (516,997), kulttuuri (513,042), materiaali (504,378), versio (490,419), metri (489,600), video (487,188), netti (486,672), merkitty (477,316), rooli (463,077), tyyli (460,239), linkki (433,447), positiivinen (420,583), internet (414,143), riski (392,924), kokki (381,467), merkitä (360,874), bändi (354,290), sekki (353,835)
 
 ## Close to the threshold (norm 25 to 50; check by eye)
 
 | stem | english | norm | tagged |
 |---|---|---:|---|
 | abnormi | abnormal | 25.0 | yes |
-| tina | tin | 25.0 | no |
-| idiomaattinen | idiomatic | 26.2 | yes |
-| adaptiivinen | adaptive | 26.7 | yes |
-| normaalistaa | normalise | 26.7 | yes |
-| pasianssi | patience | 26.7 | yes |
-| symmetrinen | symmetric | 27.3 | yes |
-| seksismi | sexism | 27.5 | yes |
-| euroatlanttinen | euro-atlantic | 28.0 | yes |
-| analyyttinen | analytical | 28.3 | yes |
-| minimi | minimum | 28.6 | yes |
-| dogmaatikko | dogmatist | 29.1 | yes |
-| stokastinen | stochastic | 29.1 | yes |
-| heraldikko | heraldist | 30.0 | yes |
+| standardoida | to standardize | 25.0 | yes |
+| terapeutti | therapist | 26.0 | yes |
+| audiovisuaalinen | audiovisual | 26.2 | yes |
+| kurssi | course | 26.7 | yes |
+| kompleksi | complex | 26.7 | yes |
+| ergonominen | ergonomic | 27.3 | yes |
+| kambri | cambrian | 27.5 | yes |
+| vermutti | vermouth | 27.5 | yes |
+| paali | bale | 28.0 | yes |
+| kandelaaberi | candelabrum | 28.3 | yes |
+| proletarisoida | to proletarianize | 28.6 | yes |
+| hysteerinen | hysterical | 29.1 | yes |
+| syntaktinen | syntactic | 29.1 | yes |
+| heraldinen | heraldic | 30.0 | yes |
 | petrokemia | petrochemistry | 30.0 | yes |
 | kanveesi | canvas | 30.0 | yes |
-| autenttinen | authentic | 30.9 | yes |
-| diileri | dealer | 31.4 | yes |
-| muusata | mouse | 31.4 | yes |
-| volyymi | volume | 31.4 | yes |
-| narsisti | narcissist | 32.0 | yes |
-| graviditeetti | gravidity | 32.3 | yes |
-| kofeiini | caffeine | 32.5 | yes |
-| gaullistinen | gaullist | 33.3 | yes |
-| ruoste | rust | 33.3 | no |
-| plastiikka | plasticity | 34.0 | yes |
-| rakkula | saccule | 34.3 | yes |
-| sfinksi | sphinx | 34.3 | yes |
-| kristikunta | christianity | 35.0 | yes |
-| deponoida | deposit | 35.6 | no |
-| moderoida | moderate | 35.6 | no |
-| traktaatti | tract | 36.0 | no |
-| lammas | lamb | 36.7 | no |
-| tapuli | staple | 36.7 | no |
-| pasteija | paste | 37.5 | no |
-| postpositionaalinen | prepositional | 37.9 | no |
-| fysikaalinen | physical | 38.3 | no |
-| evolutiivinen | evolutionary | 40.0 | no |
-| lape | plane | 40.0 | no |
-| pleksilasi | plexiglass | 40.0 | no |
-| troolari | trawler | 40.0 | no |
-| prokuura | procuration | 40.0 | no |
-| bigaaminen | bigamous | 42.0 | no |
-| vitaalinen | vital | 42.0 | no |
-| jiddiš | yiddish | 42.9 | no |
-| byrokraatti | bureaucrat | 43.6 | no |
-| kuori | quire | 44.0 | no |
-| pääri | peer | 44.0 | no |
-| voida | be | 44.0 | no |
-| heraldiikka | heraldry | 45.5 | no |
-| kanuuna | cannon | 45.7 | no |
-| pitko | bitcoin | 45.7 | no |
-| tarvike | article | 45.7 | no |
-| jonglööri | juggler | 46.7 | no |
-| telakoida | dock | 46.7 | no |
-| tykky | thick | 48.0 | no |
-| kilistä | clink | 48.6 | no |
-| suklaa | chocolate | 48.9 | no |
-| halki | halved | 50.0 | no |
-| markiisi | marquess | 50.0 | no |
-| purske | burst | 50.0 | no |
-| uurre | furrow | 50.0 | no |
+| presidenttiys | presidency | 30.8 | yes |
+| totalitaristinen | totalitarian | 31.2 | yes |
+| miliisi | militia | 31.4 | yes |
+| viktoriaaninen | victorian | 31.4 | yes |
+| marginaali | margin | 32.0 | yes |
+| antisemitisti | anti-semite | 32.3 | yes |
+| optoelektroninen | optoelectric | 32.5 | yes |
+| degeneroitua | to degenerate | 33.3 | yes |
+| nippa | nipple | 33.3 | yes |
+| kuriositeetti | curiosity | 33.8 | yes |
+| koaguloida | to coagulate | 34.0 | yes |
+| koksata | to coke | 34.3 | yes |
+| kvalitatiivinen | qualitative | 34.7 | yes |
+| optimaalinen | optimal | 35.0 | yes |
+| geodeetti | geodesist | 35.6 | no |
+| resonoida | to resonate | 35.6 | no |
+| monstrumi | monstrosity | 36.4 | no |
+| mallas | malt | 36.7 | no |
+| ekspansiivinen | expansive | 37.1 | no |
+| graafikko | graphist | 37.8 | no |
+| dumdumluoti | dumdum | 38.2 | no |
+| eksklusiivinen | exclusive | 38.6 | no |
+| haloo | hello | 40.0 | no |
+| minolainen | minoan | 40.0 | no |
+| rulla | roll | 40.0 | no |
+| kaarti | guard | 40.0 | no |
+| ekvatoriaalinen | equatorial | 41.3 | no |
+| kserokopio | xerocopy | 42.0 | yes |
+| skyytti | scythian | 42.5 | no |
+| preeria | prairie | 42.9 | no |
+| dyyni | dune | 44.0 | no |
+| pihka | pitch | 44.0 | no |
+| šaahi | shah | 44.0 | no |
+| kafkamainen | kafkaesque | 45.5 | no |
+| kellata | to yellow | 45.7 | no |
+| pussata | to kiss | 45.7 | no |
+| bolševistinen | bolshevist | 46.2 | no |
+| penikoida | to pup | 46.7 | no |
+| viekastella | to weasel | 47.3 | no |
+| iisoppi | hyssop | 48.6 | no |
+| spagaatti | split | 48.9 | no |
+| etabloitua | to establish | 50.0 | no |
+| lehtori | lecturer | 50.0 | no |
+| pesä | nest | 50.0 | no |
+| sitten | then | 50.0 | no |

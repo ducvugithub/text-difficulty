@@ -40,7 +40,8 @@
 - **Steps:**
   - Drop names (Helsingissä), abbreviations and unrecognised words (typos, English, spoken Finnish)
   - Merge forms into lemmas (talo / talon / talossa → talo) and add up the counts
-  - Lowercase the lemmas. Readings of one form that differ only by case are one lemma, counted once (lappeenranta / Lappeenranta had the same 94,626 count twice)
+  - Lowercase the lemmas
+  - If the analyser returns the same lemma twice for one form, once capitalised and once lowercase (lappeenranta and Lappeenranta), merge them and add the form's count once
   - Ambiguous form with several lemmas: each lemma gets the full count
 - **Results:** 36.1M forms → 20.6M kept → 6,459,885 lemmas, none capitalised
   - Dropped: 15.3M unrecognised forms, 206k name forms, 4.2k abbreviation forms
@@ -63,7 +64,7 @@
 - **Steps:**
   - Voikko gives each lemma its stems; a lemma with 2 or more stems is a compound
   - A stem's `freq` adds up the `freq` of every lemma that contains it
-  - Voikko's `=` inside a stem (`takaisin=kytkentä`) is removed
+  - Voikko's `=` marker inside a stem (`takaisin=kytkentä`) is unreliable, so it is removed
 - **Results:** 6,459,885 lemmas; 6,126,323 compounds; 26,211 stems
 
 ### 5. Rank and filter English-looking words: `05_rank_and_filter.py`
@@ -84,16 +85,20 @@
     - `borrowed`: 1 = tagged English-looking
     - `reason`: `edit score`; `bor:en` (etymology says borrowed from English); `native etymology` (a rule fired, but the stem is inherited from Proto-Finnic / Uralic, so not tagged)
 - **Steps:**
-  - Edit score from the stem to the closest English translation of its first meaning
-    - normal edit costs 1
-    - standard modifications Finnish applies when borrowing cost 0.2: final -i, doubled letters (tt/t, ss/s), k/c, f/ph, k/ch, ia/y, ... (table: `RULES` in `english_borrowing.py`, from the team sheet)
-    - verb endings (-ta, -tä, -oida, -öidä) cost 0.2 **only for verbs** (English translation "to ..."): the -ta of the noun rotta (rat) is not a verb ending
-  - A translation identical to the stem counts only if it is a real English word (wordfreq Zipf ≥ 2.8): radio, video, internet pass; pulla (the Finnish bun), kerma, raita do not
-  - Tag a stem when `norm` is at most **35**, or when its etymology says `bor:en` (then `english` is the English source word, e.g. kämppä ← camp)
-  - Do not tag native stems (inherited from Proto-Finnic / Uralic)
-  - Do not judge: stems under 3 characters, stems without a Wiktionary entry or a translation, capitalised stems
-  - Lemma rule `--lemma-rule`: remove a lemma when all its stems are tagged (default), any, or none
-  - Sort lemmas and stems by `freq`; add `rank`; optional `--min-freq` cut (off by default); `--keep-borrowed` removes nothing
+  - **Find the translation** of every lowercase stem (26,211 stems)
+    - look the stem up in Wiktionary (a one-time download, saved locally)
+    - take the English translations of its first meaning (single words; a verb keeps its "to")
+  - **Calculate the edit score** between the stem and its translation
+    - a normal edit (insert, delete, change a letter) costs 1
+    - the usual changes Finnish makes when it borrows a word cost 0.2: final -i, doubled letters, k/c, f/ph, ... (from the team sheet)
+    - `norm` = edit score / length of the longer word × 100
+  - **Rules to filter English-looking stems**
+    - tag the stem when `norm` is at most 35
+    - tag it also when Wiktionary says it was borrowed from English
+    - do not tag it when Wiktionary says it is inherited Finnish
+    - skip stems with no translation, very short stems and names
+    - a translation identical to the stem counts only if it is a real English word (radio yes, the Finnish bun "pulla" no)
+  - **Then:** remove a lemma when all its stems are tagged; sort lemmas and stems by `freq` and add `rank`
 - **Results:**
 
   | | before | tagged / removed | final |

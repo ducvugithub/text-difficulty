@@ -2,7 +2,8 @@
 
 Per surface form: drop proper-name / abbreviation readings when a common-word reading exists; forms with only
 name (or only abbreviation) readings are dropped; forms Voikko does not recognise (typos, English, junk) are dropped.
-Lemmas are lowercase: readings of one form that differ only by case are one lemma, counted once, and forms of the same
+Lemmas are lowercase. If the analyser returns the same lemma twice for one form (capitalised and lowercase, e.g. lappeenranta and
+Lappeenranta), the two are merged and the form's count is added once; forms of the same
 lemma add up (names are dropped first, so a capitalised leftover such as Pirkanmaa just becomes pirkanmaa).
 Ambiguous forms (e.g. 'sinä' = se/sinä) count in full for every distinct lemma (so lemma totals can exceed the corpus size).
 Per lemma `freq` = all its inflected forms added up.

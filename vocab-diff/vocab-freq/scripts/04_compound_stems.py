@@ -2,7 +2,7 @@
 
 A stem is a root of a word (työ, paikka, ostaa). Voikko gives a lemma its stems (WORDBASES, derivational suffixes ignored);
 a lemma with 2 or more stems is a compound. A stem's `freq` = the `freq` of every lemma that contains it, added up.
-Voikko marks lexicalised units inside a stem with '=' ('takaisin=kytkentä'); it is removed.
+Voikko's '=' marker inside a stem ('takaisin=kytkentä') is unreliable, so it is removed.
 Capitalised stems are names or abbreviations (Aalto, EU) and are left out of the stem list: "Aamu" is not "aamu".
 
 Input : cleaned/03_lemmas.tsv

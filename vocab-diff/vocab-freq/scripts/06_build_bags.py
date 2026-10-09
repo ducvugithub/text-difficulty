@@ -31,6 +31,7 @@ def main():
 
     lines = ["# 06 build bags", "- bag 1 = most frequent ... highest bag = rarest",
              "- columns of the bag files: `stem` / `lemma`; `freq` its count (a stem's full count, a lemma's own count); `bag` the bag number"]
+    log10 = {}  # level -> (bands, items per bag) for the compact lemma / stem table
     for level, loader in (("stem", load_stem_list), ("lemma", lambda: load_lemma_list("freq"))):
         items, freq = loader()
         grand_total = sum(freq.values())
@@ -53,10 +54,21 @@ def main():
             lines += ["", f"## {level}s: {method} -> {out.name}", "", doc, "",
                       f"| bag | {level}s | " + ("band (fixed edges) | " if band else "") + "observed freq range | % of total freq count |",
                       "|---:|---:|" + ("---|" if band else "") + "---|---:|"]
+            if band:
+                log10[level] = ({b: (10 ** (top - b + 1), 10 ** (top - b + 2) - 1) for b in stats}, {b: stats[b][0] for b in stats})
             for b in sorted(stats):
                 n, hi, lo, tot = stats[b]
                 edges = f" {10 ** (top - b + 1):,} to {10 ** (top - b + 2) - 1:,} |" if band else ""
                 lines.append(f"| {b} | {n:,} |{edges} {lo:,} - {hi:,} | {100 * tot / grand_total:.1f}% |")
+    if len(log10) == 2:  # lemmas and stems side by side: the bands are the same, the number of items per bag differs
+        bands, _ = log10["lemma"]
+        bags = sorted(bands)
+        fmt = lambda lo, hi: f"{lo:,} to {hi:,}"
+        lines += ["", "## log10_freq_bin: bands and items per bag (lemmas and stems)", "",
+                  "| bag | " + " | ".join(str(b) for b in bags) + " |", "|---|" + "---:|" * len(bags),
+                  "| count | " + " | ".join(fmt(*bands[b]) for b in bags) + " |",
+                  "| lemmas | " + " | ".join(f"{log10['lemma'][1].get(b, 0):,}" for b in bags) + " |",
+                  "| stems | " + " | ".join(f"{log10['stem'][1].get(b, 0):,}" for b in bags) + " |"]
     write_report("06_build_bags.md", lines)
 
 

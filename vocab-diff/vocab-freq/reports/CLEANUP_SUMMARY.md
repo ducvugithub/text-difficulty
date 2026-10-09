@@ -86,8 +86,6 @@
     - `reason`: `edit score`; `bor:en` (etymology says borrowed from English); `native etymology` (a rule fired, but the stem is inherited from Proto-Finnic / Uralic, so not tagged)
 - **Steps:**
   - **Find the translation** of every lowercase stem (26,211 stems)
-    - look the stem up in Wiktionary (a one-time download, saved locally)
-    - take the English translations of its first meaning (single words; a verb keeps its "to")
   - **Calculate the edit score** between the stem and its translation
     - a normal edit (insert, delete, change a letter) costs 1
     - the usual changes Finnish makes when it borrows a word cost 0.2: final -i, doubled letters, k/c, f/ph, ... (from the team sheet)
@@ -97,8 +95,8 @@
     - tag it also when Wiktionary says it was borrowed from English
     - do not tag it when Wiktionary says it is inherited Finnish
     - skip stems with no translation, very short stems and names
-    - a translation identical to the stem counts only if it is a real English word (radio yes, the Finnish bun "pulla" no)
-  - **Then:** remove a lemma when all its stems are tagged; sort lemmas and stems by `freq` and add `rank`
+  - **Lemmas:** a lemma counts as English-looking when all its stems are English-looking, and is removed
+  - **Then:** sort lemmas and stems by `freq` and add `rank`
 - **Results:**
 
   | | before | tagged / removed | final |
@@ -130,7 +128,8 @@
     | bag | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     |---|---|---|---|---|---|---|---|---|---|
     | count | 100M+ | 10M–99.9M | 1M–9.99M | 100k–999k | 10k–99,999 | 1k–9,999 | 100–999 | 10–99 | 1–9 |
-    | lemmas | 2 | 24 | 399 | 2,489 | 10,950 | 46,409 | 176,128 | 765,794 | 5,263,104 |
+    | lemmas | 2 | 25 | 401 | 2,502 | 11,012 | 46,629 | 176,769 | 768,222 | 5,277,621 |
+    | stems | 2 | 32 | 584 | 2,119 | 5,143 | 6,580 | 3,787 | 1,802 | 655 |
 
     - example: count 1,184,221 → bag 3
 - **Results:** per-bag counts, ranges and % of total count: `reports/06_build_bags.md`

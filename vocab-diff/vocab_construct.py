@@ -7,7 +7,8 @@
     VocabDiffFeatureConstruct(signals=["lexical"])                the lexical signal only
     VocabDiffFeatureConstruct(lemma_bin_method="uniform_rank_bin", stem_n_bins=8)   bin settings go to the freq signal
 
-A new signal (concreteness, CEFR levels, ...) is a new folder with a FeatureConstruct class, registered in SIGNALS.
+A new signal (concreteness, CEFR levels, ...) is a new folder with a class that subclasses VocabFeatureConstruct
+(vocab-diff/shared/vocab_base.py, the parent of every signal), registered in SIGNALS.
 """
 import importlib
 import sys

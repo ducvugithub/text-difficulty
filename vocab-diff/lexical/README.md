@@ -1,6 +1,6 @@
 # lexical: word-form signal
 
-`lexical_features.py` (`LexicalFeatures`): features of how the words in a text are built. Needs only Voikko and the lemma list.
+`lexical_features.py` (`LexicalFeatures`, a `VocabFeatureConstruct`): features of how the words in a text are built. Needs only Voikko and the lemma list.
 - lexical diversity: `n_unique_lemmas`, `ttr_lemma_200`
 - word form: `avg_word_length`, `long_word_ratio`
 - compounding: `compound_ratio`, `avg_compound_parts`, `n_compound_tokens`

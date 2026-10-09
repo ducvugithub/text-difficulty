@@ -18,8 +18,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "vocab-diff" / "shared"))
-from base import FeatureConstruct, TextAnalysis  # noqa: E402
-from text_common import load_lemma_list, pick_reading  # noqa: E402
+from base import TextAnalysis  # noqa: E402
+from vocab_base import VocabFeatureConstruct  # noqa: E402
 
 CONTENT_CLASSES = {"nimisana", "laatusana", "teonsana", "seikkasana", "nimisana_laatusana"}
 LONG_WORD = 10
@@ -32,35 +32,22 @@ FEATURES = ["n_unique_lemmas", "ttr_lemma_200", "avg_word_length", "long_word_ra
             "deriv_minen_ratio", "deriv_sti_ratio"]
 
 
-class LexicalFeatures(FeatureConstruct):
-    category = "vocab"
+class LexicalFeatures(VocabFeatureConstruct):
     signal = "lexical"
     feature_names = FEATURES
 
-    def __init__(self):
-        _, self.lemma_freq = load_lemma_list("freq")
-
     def build(self, analysis: TextAnalysis) -> pd.DataFrame:
-        info = {tok: self._token_info(tok, status, readings) for tok, (status, readings) in analysis.voikko.items()}
+        info = {tok: self.read_word(tok, status, readings) for tok, (status, readings) in analysis.voikko.items()}
         rows = [self._text_row(toks, info) for toks in analysis.tokens]
         return pd.DataFrame(rows, index=analysis.df.index, columns=self.feature_names)
-
-    def _token_info(self, tok, status, readings):
-        """(lemma, reading or None) of a token; names and unrecognised words have no reading."""
-        if status in ("name", "abbrev"):
-            return readings[0][0].lower(), None
-        if status != "ok":
-            return tok.lower(), None
-        reading, _ = pick_reading(readings, self.lemma_freq)
-        return reading[0].lower(), reading
 
     def _text_row(self, tokens, info):
         lemmas, content = [], []
         for tok in tokens:
-            lemma, reading = info[tok]
-            lemmas.append(lemma)
-            if reading is not None and reading[1] in CONTENT_CLASSES:
-                content.append((tok.lower(), reading))
+            word = info[tok]
+            lemmas.append(word.lemma)
+            if word.reading is not None and word.reading[1] in CONTENT_CLASSES:
+                content.append((tok.lower(), word.reading))
         n_content = len(content)
         window = lemmas[:TTR_WINDOW]
         compounds = [r for _, r in content if len(r[2]) >= 2]

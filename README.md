@@ -1,7 +1,7 @@
 # text-difficulty
 
 - `data/` — raw inputs (train/valid/test CSVs, `finnish_vocab.txt` frequency list). Local only, git-ignored.
-- `vocab-diff/` — word-level difficulty, as signals: `vocab-freq/` (frequency bins: list cleaning, bins, features), `lexical/` (word form, compounds, derivation), `shared/` (Voikko helpers), `vocab_construct.py` (`VocabDiffFeatureConstruct`, composes the signals), `build_features.py`.
+- `vocab-diff/` — word-level difficulty, as signals: `vocab-freq/` (frequency bins: list cleaning, bins, features), `lexical/` (word form, compounds, derivation), `shared/` (Voikko helpers; `vocab_base.py` = `VocabFeatureConstruct`, the parent class of the signals), `vocab_construct.py` (`VocabDiffFeatureConstruct`, composes the signals), `build_features.py`.
 - `grammar-diff/`, `cognitive-diff/` — syntactic / morphological and processing-load signals (constructs to come).
 - `base.py` — `TextAnalysis` (texts + shared preprocessing, computed once) and the `FeatureConstruct` base class.
 - `builder.py` — `TextDiffFeaturesConstruct`: builds the features of any subset of categories.

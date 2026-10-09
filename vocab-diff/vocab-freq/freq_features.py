@@ -24,20 +24,21 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "vocab-diff" / "shared"))
-from base import FeatureConstruct, TextAnalysis  # noqa: E402
-from text_common import assign_bags, load_borrowed_stems, load_lemma_list, load_stem_list, pick_reading  # noqa: E402
+from base import TextAnalysis  # noqa: E402
+from text_common import assign_bags, load_borrowed_stems, load_lemma_list, load_stem_list  # noqa: E402
+from vocab_base import VocabFeatureConstruct  # noqa: E402
 
 LEVELS = ("stem", "lemma")
 
 
-class FreqBinFeatures(FeatureConstruct):
-    category = "vocab"
+class FreqBinFeatures(VocabFeatureConstruct):
     signal = "freq"
 
     def __init__(self, lemma_bin_method: str = "log10_freq_bin", stem_bin_method: str = "uniform_cumfreq_bin",
                  lemma_n_bins: int = 10, stem_n_bins: int = 10):
         """n_bins is the maximum: log10_freq_bin gives one bin per decade (9 for this data) and merges the rarest decades
         into the last bin when n_bins is smaller."""
+        super().__init__()
         self.bin_methods = {"lemma": lemma_bin_method, "stem": stem_bin_method}
         self.n_bins = {"lemma": lemma_n_bins, "stem": stem_n_bins}
         items_desc, self.freq = {}, {}
@@ -55,7 +56,7 @@ class FreqBinFeatures(FeatureConstruct):
 
     def build_with_tallies(self, analysis: TextAnalysis):
         """(features, tallies): tallies has the unit counts per text, per level (unrecognised, unlisted, borrowed, bag)."""
-        info = {tok: self._token_info(status, readings) for tok, (status, readings) in analysis.voikko.items()}
+        info = {tok: self._token_info(self.read_word(tok, status, readings)) for tok, (status, readings) in analysis.voikko.items()}
         rows, tallies = [], []
         for toks in analysis.tokens:
             row, tally = self._text_row(toks, info)
@@ -64,14 +65,14 @@ class FreqBinFeatures(FeatureConstruct):
         return (pd.DataFrame(rows, index=analysis.df.index, columns=self.feature_names),
                 pd.DataFrame(tallies, index=analysis.df.index))
 
-    def _token_info(self, status, readings):
-        """One lemma-level unit and the stem-level units of a token. A unit is (kind, bin, log10 count);
+    def _token_info(self, word):
+        """One lemma-level unit and the stem-level units of a word. A unit is (kind, bin, log10 count);
         kind is bag / borrowed / unlisted / unrecognised / skipped."""
-        if status in ("name", "abbrev"):
+        if word.kind == "skipped":
             return {"lemma_unit": ("skipped", 0, 0.0), "stem_units": []}
-        if status != "ok":
+        if word.kind == "unrecognised":
             return {"lemma_unit": ("unrecognised", 0, 0.0), "stem_units": [("unrecognised", 0, 0.0)]}
-        reading, listed = pick_reading(readings, self.freq["lemma"])
+        reading, listed = word.reading, word.listed
         stems = [s.replace("=", "") for s in reading[2]]
         stems = [s for s in stems if s and not s[:1].isupper()] or [reading[0].lower()]
         units = []

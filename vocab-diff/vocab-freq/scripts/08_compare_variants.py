@@ -17,7 +17,8 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import spearmanr
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root: base.py, builder.py, dataset.py
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))
 from base import TextAnalysis  # noqa: E402
 from builder import TextDiffFeaturesConstruct  # noqa: E402
 from common import ensure_dirs, write_report  # noqa: E402
@@ -46,7 +47,7 @@ def main():
              f"At most {args.sample or 'all'} texts per subset are sampled. mean_bag is over the words that are in a bag.", "",
              "| level | subset | texts | bag method | rho mean_log_freq | rho OOV_coverage | rho mean_bag | rho borrowed_coverage |", "|---|---|---:|---|---:|---:|---:|---:|"]
     for method in BAG_METHODS:
-        construct = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": method, "stem_bin_method": method}}).constructs["vocab"]
+        construct = TextDiffFeaturesConstruct(configs={"vocab": {"signals": ["freq"], "lemma_bin_method": method, "stem_bin_method": method}}).constructs["vocab"].parts["freq"]
         for name, analysis in analyses.items():
             feats = construct.build(analysis)
             label = analysis.df["label"].to_numpy()

@@ -15,6 +15,11 @@ import json
 import re
 import urllib.request
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED
 from english_borrowing import english_candidates, english_source, etymology_tags, first_sense_candidates
 

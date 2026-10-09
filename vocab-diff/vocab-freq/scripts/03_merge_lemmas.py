@@ -14,6 +14,11 @@ Output: cleaned/03_lemmas.tsv  (lemma, class, stems, n_forms, freq)
 import os
 from collections import defaultdict
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, decode_readings, ensure_dirs, select_readings, write_report
 
 ENGLISH_DICT = "/usr/share/dict/words"

@@ -8,6 +8,7 @@ vocab_bag_k_coverage) for the new vocab bin features and leave everything else u
   new_lemma_bins       no_vocab + the lemma bin features (OOV, English-looking share, bin coverage, mean log count)
   new_stem_bins        no_vocab + the stem bin features (the same, per stem)
   new_lemma_stem_bins  no_vocab + both
+  new_bins_lexical     no_vocab + both bin sets + the lexical features (word length, compounds, derivation, diversity)
   surface              control for length shortcuts: text length, word length, average sentence length
 Source and origin are never used as features.
 The new features come from outputs/vocab_text_features_{split}.csv (step 9).
@@ -30,11 +31,12 @@ def _original_columns():
 
 
 def new_bins(split):
-    """(lemma bin features, stem bin features) of a split."""
+    """(lemma bin features, stem bin features, lexical features) of a split."""
     df = pd.read_csv(ROOT / "outputs" / f"vocab_text_features_{split}.csv", index_col="row").drop(columns=["label"])
     lemma = [c for c in df.columns if c.startswith("lemma_") or c == "mean_log_lemma_freq"]
     stem = [c for c in df.columns if c.startswith("stem_") or c == "mean_log_stem_freq"]
-    return df[lemma], df[stem]
+    lexical = [c for c in df.columns if c not in lemma and c not in stem and c != "borrowed_coverage"]
+    return df[lemma], df[stem], df[lexical]
 
 
 def feature_table(split, name):
@@ -42,25 +44,27 @@ def feature_table(split, name):
     df = load_split(split)
     orig = _original_columns()
     no_vocab = df[[c for c in orig if c not in OLD_VOCAB]]
-    lemma_bins, stem_bins = new_bins(split)
+    lemma_bins, stem_bins, lexical = new_bins(split)
     sets = {
         "no_vocab": lambda: no_vocab,
         "old_vocab_bins": lambda: df[orig],
         "new_lemma_bins": lambda: pd.concat([no_vocab, lemma_bins], axis=1),
         "new_stem_bins": lambda: pd.concat([no_vocab, stem_bins], axis=1),
         "new_lemma_stem_bins": lambda: pd.concat([no_vocab, lemma_bins, stem_bins], axis=1),
+        "new_bins_lexical": lambda: pd.concat([no_vocab, lemma_bins, stem_bins, lexical], axis=1),
         "surface": lambda: pd.concat([surface_features(df), df[["average_sentence_length"]]], axis=1),
     }
     return sets[name](), df
 
 
-FEATURE_SETS = ["no_vocab", "old_vocab_bins", "new_lemma_bins", "new_stem_bins", "new_lemma_stem_bins", "surface"]
+FEATURE_SETS = ["no_vocab", "old_vocab_bins", "new_lemma_bins", "new_stem_bins", "new_lemma_stem_bins", "new_bins_lexical", "surface"]
 DESCRIPTIONS = {
     "no_vocab": "the original features without the old vocab columns: syntax averages, grammar, morphology and topic counts",
     "old_vocab_bins": "no_vocab plus the 11 old vocab columns (OOV and bag coverage): the baseline",
     "new_lemma_bins": "no_vocab plus the lemma bin features: OOV, English-looking share, share of words per bin, mean log count",
     "new_stem_bins": "no_vocab plus the stem bin features: the same measures, counted per stem",
     "new_lemma_stem_bins": "no_vocab plus the lemma and the stem bin features",
+    "new_bins_lexical": "no_vocab plus both bin sets and the lexical features: word length, compounds, derivation suffixes, lexical diversity",
     "surface": "text length, characters, word length and average sentence length, a control for length shortcuts",
 }
 

@@ -117,7 +117,7 @@ Per-label MAE when trained on all train rows, and accuracy per label, are in `ex
 ## Reproduce
 ```
 cd text-difficulty
-.venv/bin/python vocab-diff/scripts/09_vocab_text_features.py    # new features -> outputs/
+.venv/bin/python vocab-diff/build_features.py    # new features -> outputs/
 .venv/bin/python modeling/run_experiment.py --train train_native
 .venv/bin/python modeling/run_experiment.py --train train_all
 ```

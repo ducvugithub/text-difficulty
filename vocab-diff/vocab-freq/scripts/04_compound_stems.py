@@ -14,6 +14,11 @@ Output: cleaned/04_lemmas_stem.tsv     (lemma, class, n_stems, n_forms, freq)
 """
 from collections import Counter
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, ensure_dirs, write_report
 
 

@@ -8,6 +8,11 @@ import argparse
 from itertools import islice
 from multiprocessing import Pool
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, ensure_dirs, run_voikko, write_report
 
 CHUNK = 50_000

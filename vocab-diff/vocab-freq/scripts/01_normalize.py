@@ -6,6 +6,11 @@ Output: cleaned/01_normalized.tsv       ('count<TAB>word'), reports/01_normalize
 import argparse
 from collections import defaultdict
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, RAW_VOCAB, WORD_RE, ensure_dirs, parse_counted_line, write_report
 
 MAX_LEN = 45  # longest legitimate Finnish compounds are ~40 chars; beyond this it is junk

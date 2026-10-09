@@ -19,6 +19,11 @@ Output: cleaned/05_lemma_freq.tsv  (rank, lemma, class, n_stems, n_forms, freq) 
 """
 import argparse
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, ensure_dirs, write_report
 from english_borrowing import MAX_NORM, MIN_LENGTH, edit_score, looks_english, norm_score
 from wiktionary import ensure_translations

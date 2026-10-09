@@ -1,7 +1,7 @@
 # vocab-freq — clean the frequency list
 
 Input `data/finnish_vocab.txt` (raw surface forms, 44.6M lines, web/forum corpus) -> lemma-level list.
-Scripts live in `../scripts/` (run in order from there; intermediate files in `cleaned/`, one report per step in `reports/`).
+Scripts live in `scripts/` (this folder) (run in order from there; intermediate files in `cleaned/`, one report per step in `reports/`).
 
 Setup: `voikkospell` on PATH (Voikko dictionary installed); steps 6-8 need `python -m venv .venv && .venv/bin/pip install -r requirements.txt`.
 Gotcha: Voikko needs a UTF-8 locale or it silently rejects every word with ä/ö (`common.run_voikko` sets `LC_ALL`).
@@ -16,6 +16,6 @@ Gotcha: Voikko needs a UTF-8 locale or it silently rejects every word with ä/ö
 | 6 | `06_build_bags.py` | bag the ranked stems AND lemmas: `--bag-method` (`uniform_rank_bin` / `uniform_cumfreq_bin` / `log10_freq_bin`, explained in `reports/06_build_bags.md`) |
 | 7 | `07_text_features.py` | recompute OOV / `vocab_bag_k_coverage` for train/valid/test + OOV overlap report |
 | 8 | `08_compare_variants.py` | Spearman vs label for each level (stem / lemma) and bag method, all rows and Finnish-native-only |
-| 9 | `09_vocab_text_features.py` | builds the vocab text features with `VocabDiffFeatureConstruct` (`vocab-diff/vocab_construct.py`) for all splits and correlates them with the label; list in `docs/features.md` |
+| 9 | `../build_features.py` | builds the features of both vocab signals with `VocabDiffFeatureConstruct` (`vocab-diff/vocab_construct.py`) and correlates them with the label; list in `docs/features.md` |
 
 Step-by-step input/output/columns and findings: `reports/CLEANUP_SUMMARY.md`.

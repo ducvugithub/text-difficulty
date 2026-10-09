@@ -1,6 +1,7 @@
 """Helpers shared by the text-level scripts (07, 08). Needs pandas (see requirements.txt)."""
 import math
 import sys
+from functools import lru_cache
 from collections import Counter
 from pathlib import Path
 
@@ -49,18 +50,21 @@ def analyse_tokens_full(tokens):
     return result
 
 
+@lru_cache(maxsize=None)
 def load_stem_list():
     """Final stem list as (ordered stems, stem -> full count), highest count first."""
     df = pd.read_csv(CLEANED / "05_stem_freq.tsv", sep="\t", usecols=["stem", "freq"], keep_default_na=False)
     return df["stem"].tolist(), dict(zip(df["stem"], df["freq"]))
 
 
+@lru_cache(maxsize=None)
 def load_borrowed_stems():
     """Stems tagged English-looking in step 5 (removed from the stem list)."""
     df = pd.read_csv(CLEANED / "05_stem_borrowing.tsv", sep="\t", usecols=["stem", "borrowed"], keep_default_na=False)
     return set(df.loc[df["borrowed"] == 1, "stem"])
 
 
+@lru_cache(maxsize=None)
 def load_lemma_list(variant):
     """Final list as (ordered lemmas, lemma -> freq of `variant`), highest frequency first."""
     df = pd.read_csv(CLEANED / "05_lemma_freq.tsv", sep="\t", usecols=["lemma", variant], keep_default_na=False)
@@ -97,6 +101,13 @@ def assign_bags(items_desc, freq, method, n_bags=N_BAGS):
         top = max(int(math.log10(freq[item])) for item in items_desc)
         return {item: min(top - int(math.log10(freq[item])) + 1, n_bags) for item in items_desc}
     raise ValueError(f"unknown bag method {method!r}")
+
+
+def pick_reading(readings, lemma_freq):
+    """(reading, listed lemma or None) of an analysed word: the reading whose lemma has the highest list frequency
+    (context-free); `listed` is None when no candidate lemma is in the list, and the first reading is used."""
+    listed = best_lemma([r[0].lower() for r in readings], lemma_freq)
+    return next((r for r in readings if r[0].lower() == listed), readings[0]), listed
 
 
 def best_lemma(candidates, freq):

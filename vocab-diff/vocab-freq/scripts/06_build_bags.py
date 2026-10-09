@@ -14,6 +14,11 @@ Output: cleaned/06_stem_bags_{method}.tsv, cleaned/06_lemma_bags_{method}.tsv (i
 import argparse
 import math
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))  # common.py, text_common.py
+
 from common import CLEANED, ensure_dirs, write_report
 from text_common import BAG_METHOD_DOCS, BAG_METHODS, assign_bags, load_lemma_list, load_stem_list
 

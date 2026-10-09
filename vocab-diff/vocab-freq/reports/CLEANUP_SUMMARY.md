@@ -1,6 +1,6 @@
 # Cleanup steps summary (updated 2026-10-05)
 
-- Scripts: `vocab-diff/scripts/`
+- Scripts: `vocab-diff/vocab-freq/scripts/` (steps 1-8), `vocab-diff/build_features.py` (features of both vocab signals); shared helpers: `vocab-diff/shared/`
 - Intermediate files: `cleaned/` (git-ignored)
 - Per-step numbers: the `0N_*.md` reports next to this file
 
@@ -186,7 +186,7 @@
   - Best bin method: `log10_freq_bin` for lemmas, `uniform_cumfreq_bin` for stems; `uniform_rank_bin` is the weakest
   - `borrowed_coverage` is positive: harder texts have more English-looking units, not fewer
 
-### 9. Vocab text features: `09_vocab_text_features.py`
+### 9. Vocab text features: `vocab-diff/build_features.py`
 - **Input:** train/valid/test CSVs (`text` column), `05_lemma_freq.tsv` (to pick the lemma of an ambiguous word)
 - **Output:** `outputs/vocab_text_features_{train,valid,test}.csv`: `row`, `label`, one column per feature (definitions: `docs/features.md`)
   - `n_unique_lemmas`, `ttr_lemma_200` (distinct lemmas among the first 200 / 200)
@@ -195,7 +195,7 @@
   - `deriv_llinen_ratio`, `deriv_ton_ratio`: Voikko derivation suffixes
   - `deriv_minen_ratio`, `deriv_sti_ratio`: heuristics (Voikko treats these as inflection)
   - plus the step 7 bag features
-- **Steps:** `VocabDiffFeatureConstruct` (`vocab-diff/vocab_construct.py`, called through `TextDiffFeaturesConstruct` in `builder.py`) computes all features per text
+- **Steps:** `VocabDiffFeatureConstruct` (`vocab-diff/vocab_construct.py`, called through `TextDiffFeaturesConstruct` in `builder.py`) composes two signals: the frequency bins (`vocab-freq/freq_features.py`) and the lexical features (`lexical/lexical_features.py`); the correlation report is `vocab-diff/reports/vocab_features.md`
 - **Results** (Spearman with the label, train, all rows / native only):
   - `n_compound_tokens` +0.53 / +0.50
   - `avg_word_length` +0.50 / +0.50

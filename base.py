@@ -12,8 +12,8 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
-# the Voikko helpers live with the vocab-list pipeline
-sys.path.insert(0, str(ROOT / "vocab-diff" / "scripts"))
+# the Voikko helpers are shared by the vocab signals
+sys.path.insert(0, str(ROOT / "vocab-diff" / "shared"))
 
 from common import WORD_RE  # noqa: E402
 from text_common import analyse_tokens_full  # noqa: E402

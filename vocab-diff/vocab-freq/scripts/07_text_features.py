@@ -12,7 +12,8 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root: base.py, builder.py, dataset.py
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))
 from base import ROOT, TextAnalysis  # noqa: E402
 from builder import TextDiffFeaturesConstruct  # noqa: E402
 from common import ensure_dirs, write_report  # noqa: E402
@@ -32,7 +33,8 @@ def main():
     ensure_dirs()
     OUT_DIR.mkdir(exist_ok=True)
 
-    construct = TextDiffFeaturesConstruct(configs={"vocab": {"lemma_bin_method": args.lemma_bin_method, "stem_bin_method": args.stem_bin_method, "lemma_n_bins": args.lemma_n_bins, "stem_n_bins": args.stem_n_bins}}).constructs["vocab"]
+    vocab = TextDiffFeaturesConstruct(configs={"vocab": {"signals": ["freq"], "lemma_bin_method": args.lemma_bin_method, "stem_bin_method": args.stem_bin_method, "lemma_n_bins": args.lemma_n_bins, "stem_n_bins": args.stem_n_bins}}).constructs["vocab"]
+    construct = vocab.parts["freq"]
     bag_cols = construct.bag_columns
     keep = [c for lv in LEVELS for c in (f"{lv}_OOV_coverage", f"{lv}_borrowed_coverage", *bag_cols[lv], f"mean_log_{lv}_freq")]
 

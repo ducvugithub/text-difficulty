@@ -15,7 +15,7 @@ COGNITIVE = [("cognitive", "parse_old"), ("cognitive", "sentence_length")]
 
 FEATURE_SETS = {
     # controls and the original features that come with the data
-    "text_length": {"description": "text length only: words, characters, mean word length, mean sentence length", "surface": True},
+    "surface": {"description": "surface measures: words, characters, mean word length, mean sentence length", "surface": True},
     "original_vocab_bins": {"description": "the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags)", "columns": OLD_VOCAB},
     "original_all": {"description": "the 402 original columns: syntax averages, old vocab bins, concept and topic columns", "original": "all"},
     # one category each
@@ -33,11 +33,11 @@ FEATURE_SETS = {
 }
 
 # the sets an experiment compares by default (--sets chooses others), in the order of the reports
-EXPERIMENT_SETS = ["text_length", "original_vocab_bins", "vocab", "grammar_manual", "grammar_rarity", "grammar_coverage", "grammar_all", "cognitive",
+EXPERIMENT_SETS = ["surface", "original_vocab_bins", "vocab", "grammar_manual", "grammar_rarity", "grammar_coverage", "grammar_all", "cognitive",
                    "vocab_grammar_coverage", "vocab_grammar_coverage_cognitive", "all_new", "original_all"]
 # readable names for reports: (new) = built here, (old) = the columns that come with the data
 LABELS = {
-    "text_length": "length only (new)", "original_vocab_bins": "vocab_bins (old)", "original_all": "all (old)",
+    "surface": "surface (new)", "original_vocab_bins": "vocab_bins (old)", "original_all": "all (old)",
     "vocab": "vocab (new)", "grammar_manual": "grammar_manual (new)", "grammar_rarity": "grammar_rarity (new)",
     "grammar_coverage": "grammar_coverage (new)", "grammar_all": "grammar_all (new)", "cognitive": "cognitive (new)",
     "cognitive_dependency": "cognitive_dependency (new)", "vocab_grammar_coverage": "vocab + grammar_coverage (new)",

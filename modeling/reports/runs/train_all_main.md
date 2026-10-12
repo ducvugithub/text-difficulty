@@ -12,14 +12,14 @@
 
 | feature set | what is in it | columns | MAE | MAE 95% CI | accuracy | accuracy ±1 step | balanced accuracy |
 |---|---|---:|---:|---|---:|---:|---:|
-| text_length | text length only: words, characters, mean word length, mean sentence length | 4 | 0.911 | [0.872, 0.949] | 16.3% | 31.4% | 13.8% |
+| surface | surface measures: words, characters, mean word length, mean sentence length | 4 | 0.911 | [0.872, 0.949] | 16.3% | 31.4% | 13.8% |
 | original_vocab_bins | the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags) | 11 | 1.264 | [1.213, 1.313] | 19.0% | 28.2% | 13.8% |
 | vocab | vocab: lemma and stem frequency bins, English-looking share, lexical features | 36 | 0.885 | [0.850, 0.919] | 14.7% | 29.4% | 15.2% |
 | grammar_manual | grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels) | 12 | 1.217 | [1.169, 1.261] | 18.6% | 26.0% | 13.8% |
 | grammar_rarity | grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF) | 17 | 1.249 | [1.199, 1.294] | 18.3% | 26.5% | 14.5% |
 | grammar_coverage | grammar: the share of every concept and every topic in the text (one feature each) | 401 | 0.963 | [0.926, 1.000] | 15.4% | 27.1% | 16.0% |
 | grammar_all | grammar: manual levels, rarity and coverage together | 430 | 0.962 | [0.925, 0.999] | 15.1% | 27.1% | 15.7% |
-| cognitive | cognitive: precomputed parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 1.137 | [1.093, 1.185] | 16.6% | 26.1% | 11.8% |
+| cognitive | cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 1.137 | [1.093, 1.185] | 16.6% | 26.1% | 11.8% |
 | vocab_grammar_coverage | vocab and grammar coverage | 437 | 0.777 | [0.744, 0.811] | 16.5% | 34.1% | 16.3% |
 | vocab_grammar_coverage_cognitive | vocab, grammar coverage and cognitive | 444 | 0.639 | [0.611, 0.669] | 21.6% | 45.3% | 21.4% |
 | all_new | every new feature: vocab, all grammar, cognitive | 473 | 0.639 | [0.611, 0.669] | 21.5% | 45.4% | 21.1% |
@@ -31,7 +31,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 1.82 | 1.11 | 0.47 | 0.29 | 0.38 | 1.14 | 1.15 | 1.44 |
+| surface | 1.82 | 1.11 | 0.47 | 0.29 | 0.38 | 1.14 | 1.15 | 1.44 |
 | original_vocab_bins | 1.99 | 1.46 | 0.47 | 0.16 | 0.43 | 1.31 | 1.84 | 2.31 |
 | vocab | 1.90 | 1.30 | 0.70 | 0.43 | 0.27 | 0.93 | 0.98 | 1.19 |
 | grammar_manual | 1.92 | 1.34 | 0.59 | 0.17 | 0.44 | 1.31 | 1.78 | 2.00 |
@@ -48,7 +48,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 0.0% | 0.0% | 23.3% | 47.0% | 31.2% | 1.7% | 7.4% | 0.0% |
+| surface | 0.0% | 0.0% | 23.3% | 47.0% | 31.2% | 1.7% | 7.4% | 0.0% |
 | original_vocab_bins | 0.0% | 0.0% | 16.7% | 80.9% | 12.5% | 0.0% | 0.0% | 0.0% |
 | vocab | 0.0% | 0.0% | 25.0% | 31.1% | 52.1% | 5.1% | 7.9% | 0.0% |
 | grammar_manual | 0.0% | 0.0% | 10.0% | 79.2% | 20.8% | 0.0% | 0.0% | 0.0% |
@@ -65,7 +65,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 0.0% | 0.0% | 56.7% | 86.9% | 66.7% | 1.7% | 13.5% | 0.0% |
+| surface | 0.0% | 0.0% | 56.7% | 86.9% | 66.7% | 1.7% | 13.5% | 0.0% |
 | original_vocab_bins | 0.0% | 0.0% | 58.3% | 95.6% | 70.8% | 0.0% | 0.0% | 0.0% |
 | vocab | 0.0% | 1.0% | 36.7% | 63.9% | 83.3% | 8.5% | 19.7% | 4.4% |
 | grammar_manual | 0.0% | 0.0% | 26.7% | 97.8% | 62.5% | 0.0% | 0.0% | 0.0% |
@@ -78,7 +78,7 @@
 | all_new | 0.0% | 44.9% | 73.3% | 72.1% | 66.7% | 35.6% | 31.5% | 28.9% |
 | original_all | 0.0% | 0.0% | 36.7% | 83.6% | 89.6% | 25.4% | 4.1% | 6.7% |
 
-### test, ridge regression: confusion matrix: text_length
+### test, ridge regression: confusion matrix: surface
 
 | true \ predicted | 1 | 1.5 | 2 | 2.5 | 3 | 3.5 | 4 | 4.5 | 5 | 5.5 | 6 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -238,14 +238,14 @@
 
 | feature set | what is in it | columns | MAE | MAE 95% CI | accuracy | accuracy ±1 step | balanced accuracy |
 |---|---|---:|---:|---|---:|---:|---:|
-| text_length | text length only: words, characters, mean word length, mean sentence length | 4 | 0.944 | [0.877, 1.012] | 13.3% | 30.0% | 11.1% |
+| surface | surface measures: words, characters, mean word length, mean sentence length | 4 | 0.944 | [0.877, 1.012] | 13.3% | 30.0% | 11.1% |
 | original_vocab_bins | the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags) | 11 | 1.273 | [1.183, 1.364] | 19.0% | 28.9% | 13.2% |
 | vocab | vocab: lemma and stem frequency bins, English-looking share, lexical features | 36 | 0.922 | [0.861, 0.986] | 12.9% | 28.1% | 16.5% |
 | grammar_manual | grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels) | 12 | 1.196 | [1.109, 1.282] | 20.2% | 28.1% | 17.9% |
 | grammar_rarity | grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF) | 17 | 1.233 | [1.140, 1.324] | 22.1% | 30.0% | 18.9% |
 | grammar_coverage | grammar: the share of every concept and every topic in the text (one feature each) | 401 | 1.004 | [0.937, 1.071] | 14.4% | 27.0% | 17.1% |
 | grammar_all | grammar: manual levels, rarity and coverage together | 430 | 1.003 | [0.937, 1.071] | 14.4% | 27.0% | 17.1% |
-| cognitive | cognitive: precomputed parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 1.190 | [1.111, 1.269] | 11.0% | 20.5% | 6.9% |
+| cognitive | cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 1.190 | [1.111, 1.269] | 11.0% | 20.5% | 6.9% |
 | vocab_grammar_coverage | vocab and grammar coverage | 437 | 0.840 | [0.782, 0.900] | 15.6% | 28.9% | 17.4% |
 | vocab_grammar_coverage_cognitive | vocab, grammar coverage and cognitive | 444 | 0.697 | [0.643, 0.753] | 20.9% | 38.0% | 25.7% |
 | all_new | every new feature: vocab, all grammar, cognitive | 473 | 0.697 | [0.644, 0.753] | 20.9% | 37.6% | 25.7% |
@@ -257,7 +257,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 1.49 | 1.16 | 0.42 | 0.31 | 0.39 | 1.08 | 1.24 | 1.59 |
+| surface | 1.49 | 1.16 | 0.42 | 0.31 | 0.39 | 1.08 | 1.24 | 1.59 |
 | original_vocab_bins | 1.96 | 1.43 | 0.48 | 0.20 | 0.39 | 1.36 | 1.87 | 2.32 |
 | vocab | 1.56 | 1.35 | 0.68 | 0.48 | 0.30 | 0.81 | 1.06 | 1.22 |
 | grammar_manual | 1.91 | 1.34 | 0.54 | 0.19 | 0.34 | 1.35 | 1.75 | 1.97 |
@@ -274,7 +274,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 0.0% | 0.0% | 17.6% | 38.7% | 27.3% | 0.0% | 4.9% | 0.0% |
+| surface | 0.0% | 0.0% | 17.6% | 38.7% | 27.3% | 0.0% | 4.9% | 0.0% |
 | original_vocab_bins | 0.0% | 0.0% | 23.5% | 72.6% | 9.1% | 0.0% | 0.0% | 0.0% |
 | vocab | 0.0% | 0.0% | 11.8% | 24.2% | 63.6% | 26.7% | 5.9% | 0.0% |
 | grammar_manual | 0.0% | 0.0% | 17.6% | 71.0% | 54.5% | 0.0% | 0.0% | 0.0% |
@@ -291,7 +291,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 0.0% | 0.0% | 58.8% | 80.6% | 63.6% | 6.7% | 10.8% | 0.0% |
+| surface | 0.0% | 0.0% | 58.8% | 80.6% | 63.6% | 6.7% | 10.8% | 0.0% |
 | original_vocab_bins | 0.0% | 0.0% | 58.8% | 90.3% | 90.9% | 0.0% | 0.0% | 0.0% |
 | vocab | 0.0% | 0.0% | 41.2% | 62.9% | 81.8% | 26.7% | 13.7% | 8.3% |
 | grammar_manual | 0.0% | 0.0% | 52.9% | 93.5% | 63.6% | 0.0% | 0.0% | 0.0% |
@@ -308,14 +308,14 @@
 
 | feature set | what is in it | columns | MAE | MAE 95% CI | accuracy | accuracy ±1 step | balanced accuracy |
 |---|---|---:|---:|---|---:|---:|---:|
-| text_length | text length only: words, characters, mean word length, mean sentence length | 4 | 0.473 | [0.445, 0.506] | 47.2% | 64.4% | 42.0% |
+| surface | surface measures: words, characters, mean word length, mean sentence length | 4 | 0.473 | [0.445, 0.506] | 47.2% | 64.4% | 42.0% |
 | original_vocab_bins | the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags) | 11 | 0.966 | [0.921, 1.013] | 17.6% | 32.6% | 15.8% |
 | vocab | vocab: lemma and stem frequency bins, English-looking share, lexical features | 36 | 0.539 | [0.505, 0.575] | 37.0% | 59.2% | 31.7% |
 | grammar_manual | grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels) | 12 | 1.030 | [0.993, 1.068] | 9.2% | 21.0% | 10.1% |
 | grammar_rarity | grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF) | 17 | 0.997 | [0.952, 1.043] | 16.6% | 31.8% | 13.9% |
 | grammar_coverage | grammar: the share of every concept and every topic in the text (one feature each) | 401 | 0.568 | [0.535, 0.603] | 36.0% | 57.6% | 27.7% |
 | grammar_all | grammar: manual levels, rarity and coverage together | 430 | 0.575 | [0.542, 0.611] | 35.8% | 54.6% | 27.3% |
-| cognitive | cognitive: precomputed parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 0.507 | [0.473, 0.542] | 42.7% | 64.2% | 32.3% |
+| cognitive | cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 0.507 | [0.473, 0.542] | 42.7% | 64.2% | 32.3% |
 | vocab_grammar_coverage | vocab and grammar coverage | 437 | 0.469 | [0.440, 0.500] | 42.8% | 67.4% | 34.9% |
 | vocab_grammar_coverage_cognitive | vocab, grammar coverage and cognitive | 444 | 0.350 | [0.326, 0.377] | 56.1% | 77.6% | 45.4% |
 | all_new | every new feature: vocab, all grammar, cognitive | 473 | 0.355 | [0.332, 0.380] | 51.8% | 76.4% | 42.1% |
@@ -327,7 +327,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 1.12 | 0.28 | 0.46 | 0.27 | 0.54 | 0.75 | 0.51 | 0.52 |
+| surface | 1.12 | 0.28 | 0.46 | 0.27 | 0.54 | 0.75 | 0.51 | 0.52 |
 | original_vocab_bins | 2.05 | 1.61 | 0.65 | 0.54 | 0.48 | 0.84 | 0.93 | 1.90 |
 | vocab | 1.49 | 0.75 | 0.69 | 0.36 | 0.38 | 0.53 | 0.48 | 0.54 |
 | grammar_manual | 1.86 | 1.20 | 0.87 | 0.47 | 0.56 | 1.15 | 1.20 | 1.63 |
@@ -344,7 +344,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 6.2% | 61.2% | 45.0% | 63.4% | 39.6% | 22.0% | 42.9% | 55.6% |
+| surface | 6.2% | 61.2% | 45.0% | 63.4% | 39.6% | 22.0% | 42.9% | 55.6% |
 | original_vocab_bins | 0.0% | 0.0% | 35.0% | 25.7% | 31.2% | 16.9% | 17.4% | 0.0% |
 | vocab | 15.6% | 24.5% | 25.0% | 42.6% | 41.7% | 30.5% | 42.9% | 31.1% |
 | grammar_manual | 0.0% | 0.0% | 21.7% | 26.8% | 22.9% | 8.5% | 0.6% | 0.0% |
@@ -361,7 +361,7 @@
 
 | feature set | 1.5 (n=32) | 2 (n=98) | 3 (n=60) | 3.5 (n=183) | 4 (n=48) | 5 (n=59) | 5.5 (n=340) | 6 (n=45) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 18.8% | 82.7% | 55.0% | 83.1% | 54.2% | 35.6% | 61.5% | 64.4% |
+| surface | 18.8% | 82.7% | 55.0% | 83.1% | 54.2% | 35.6% | 61.5% | 64.4% |
 | original_vocab_bins | 0.0% | 1.0% | 55.0% | 54.1% | 52.1% | 27.1% | 31.8% | 0.0% |
 | vocab | 18.8% | 44.9% | 45.0% | 76.0% | 66.7% | 55.9% | 61.2% | 51.1% |
 | grammar_manual | 0.0% | 2.0% | 36.7% | 61.2% | 39.6% | 15.3% | 5.3% | 0.0% |
@@ -374,7 +374,7 @@
 | all_new | 37.5% | 75.5% | 73.3% | 89.6% | 64.6% | 72.9% | 77.9% | 62.2% |
 | original_all | 31.2% | 45.9% | 58.3% | 79.2% | 54.2% | 59.3% | 67.4% | 46.7% |
 
-### test, gradient boosting: confusion matrix: text_length
+### test, gradient boosting: confusion matrix: surface
 
 | true \ predicted | 1 | 1.5 | 2 | 2.5 | 3 | 3.5 | 4 | 4.5 | 5 | 5.5 | 6 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -534,14 +534,14 @@
 
 | feature set | what is in it | columns | MAE | MAE 95% CI | accuracy | accuracy ±1 step | balanced accuracy |
 |---|---|---:|---:|---|---:|---:|---:|
-| text_length | text length only: words, characters, mean word length, mean sentence length | 4 | 0.540 | [0.472, 0.604] | 43.3% | 59.7% | 37.6% |
+| surface | surface measures: words, characters, mean word length, mean sentence length | 4 | 0.540 | [0.472, 0.604] | 43.3% | 59.7% | 37.6% |
 | original_vocab_bins | the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags) | 11 | 0.898 | [0.818, 0.978] | 19.0% | 36.9% | 18.4% |
 | vocab | vocab: lemma and stem frequency bins, English-looking share, lexical features | 36 | 0.598 | [0.536, 0.666] | 32.7% | 56.7% | 27.8% |
 | grammar_manual | grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels) | 12 | 0.998 | [0.927, 1.069] | 9.9% | 21.3% | 9.5% |
 | grammar_rarity | grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF) | 17 | 1.009 | [0.932, 1.088] | 14.1% | 26.6% | 15.0% |
 | grammar_coverage | grammar: the share of every concept and every topic in the text (one feature each) | 401 | 0.552 | [0.492, 0.609] | 33.1% | 59.3% | 24.6% |
 | grammar_all | grammar: manual levels, rarity and coverage together | 430 | 0.556 | [0.495, 0.617] | 34.6% | 58.2% | 25.5% |
-| cognitive | cognitive: precomputed parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 0.521 | [0.456, 0.595] | 41.4% | 64.3% | 36.8% |
+| cognitive | cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length | 7 | 0.521 | [0.456, 0.595] | 41.4% | 64.3% | 36.8% |
 | vocab_grammar_coverage | vocab and grammar coverage | 437 | 0.493 | [0.439, 0.543] | 36.5% | 63.5% | 30.1% |
 | vocab_grammar_coverage_cognitive | vocab, grammar coverage and cognitive | 444 | 0.384 | [0.336, 0.435] | 49.4% | 74.1% | 40.7% |
 | all_new | every new feature: vocab, all grammar, cognitive | 473 | 0.388 | [0.340, 0.440] | 47.9% | 74.5% | 40.8% |
@@ -553,7 +553,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 0.99 | 0.32 | 0.44 | 0.27 | 0.47 | 0.85 | 0.67 | 0.56 |
+| surface | 0.99 | 0.32 | 0.44 | 0.27 | 0.47 | 0.85 | 0.67 | 0.56 |
 | original_vocab_bins | 1.81 | 1.59 | 0.56 | 0.45 | 0.30 | 0.65 | 0.90 | 1.76 |
 | vocab | 1.24 | 0.78 | 0.73 | 0.42 | 0.38 | 0.50 | 0.58 | 0.60 |
 | grammar_manual | 1.85 | 1.18 | 0.66 | 0.49 | 0.90 | 1.08 | 1.11 | 1.67 |
@@ -570,7 +570,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 20.0% | 62.1% | 35.3% | 66.1% | 27.3% | 13.3% | 35.3% | 41.7% |
+| surface | 20.0% | 62.1% | 35.3% | 66.1% | 27.3% | 13.3% | 35.3% | 41.7% |
 | original_vocab_bins | 0.0% | 0.0% | 47.1% | 32.3% | 45.5% | 6.7% | 15.7% | 0.0% |
 | vocab | 6.7% | 20.7% | 11.8% | 35.5% | 36.4% | 20.0% | 41.2% | 50.0% |
 | grammar_manual | 0.0% | 0.0% | 41.2% | 27.4% | 0.0% | 6.7% | 1.0% | 0.0% |
@@ -587,7 +587,7 @@
 
 | feature set | 1.5 (n=15) | 2 (n=29) | 3 (n=17) | 3.5 (n=62) | 4 (n=11) | 5 (n=15) | 5.5 (n=102) | 6 (n=12) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| text_length | 26.7% | 72.4% | 58.8% | 87.1% | 63.6% | 20.0% | 49.0% | 66.7% |
+| surface | 26.7% | 72.4% | 58.8% | 87.1% | 63.6% | 20.0% | 49.0% | 66.7% |
 | original_vocab_bins | 0.0% | 3.4% | 58.8% | 67.7% | 72.7% | 46.7% | 28.4% | 0.0% |
 | vocab | 20.0% | 51.7% | 35.3% | 64.5% | 81.8% | 53.3% | 59.8% | 58.3% |
 | grammar_manual | 0.0% | 0.0% | 47.1% | 61.3% | 0.0% | 20.0% | 6.9% | 0.0% |
@@ -608,9 +608,9 @@ Bootstrap over the evaluation texts (1,000 resamples, the same resamples for bot
 
 | first | second | difference in MAE | 95% CI |
 |---|---|---:|---|
-| vocab | text_length | -0.026 | [-0.044, -0.006] * |
-| grammar_coverage | text_length | +0.052 | [+0.017, +0.086] * |
-| cognitive | text_length | +0.227 | [+0.198, +0.256] * |
+| vocab | surface | -0.026 | [-0.044, -0.006] * |
+| grammar_coverage | surface | +0.052 | [+0.017, +0.086] * |
+| cognitive | surface | +0.227 | [+0.198, +0.256] * |
 | grammar_coverage | grammar_manual | -0.254 | [-0.281, -0.225] * |
 | grammar_coverage | grammar_rarity | -0.285 | [-0.316, -0.254] * |
 | grammar_all | grammar_coverage | -0.001 | [-0.001, -0.000] * |
@@ -621,17 +621,17 @@ Bootstrap over the evaluation texts (1,000 resamples, the same resamples for bot
 | all_new | vocab_grammar_coverage_cognitive | -0.000 | [-0.000, -0.000] * |
 | all_new | original_all | -0.306 | [-0.338, -0.274] * |
 | vocab | original_vocab_bins | -0.378 | [-0.420, -0.334] * |
-| original_all | text_length | +0.035 | [-0.003, +0.072] |
-| vocab_grammar_coverage_cognitive | text_length | -0.271 | [-0.303, -0.241] * |
-| all_new | text_length | -0.271 | [-0.303, -0.242] * |
+| original_all | surface | +0.035 | [-0.003, +0.072] |
+| vocab_grammar_coverage_cognitive | surface | -0.271 | [-0.303, -0.241] * |
+| all_new | surface | -0.271 | [-0.303, -0.242] * |
 
 ### valid (native), ridge regression
 
 | first | second | difference in MAE | 95% CI |
 |---|---|---:|---|
-| vocab | text_length | -0.022 | [-0.057, +0.015] |
-| grammar_coverage | text_length | +0.061 | [+0.003, +0.121] * |
-| cognitive | text_length | +0.247 | [+0.204, +0.289] * |
+| vocab | surface | -0.022 | [-0.057, +0.015] |
+| grammar_coverage | surface | +0.061 | [+0.003, +0.121] * |
+| cognitive | surface | +0.247 | [+0.204, +0.289] * |
 | grammar_coverage | grammar_manual | -0.190 | [-0.237, -0.144] * |
 | grammar_coverage | grammar_rarity | -0.229 | [-0.286, -0.178] * |
 | grammar_all | grammar_coverage | -0.001 | [-0.001, -0.000] * |
@@ -642,17 +642,17 @@ Bootstrap over the evaluation texts (1,000 resamples, the same resamples for bot
 | all_new | vocab_grammar_coverage_cognitive | -0.000 | [-0.000, +0.000] |
 | all_new | original_all | -0.279 | [-0.335, -0.224] * |
 | vocab | original_vocab_bins | -0.350 | [-0.424, -0.281] * |
-| original_all | text_length | +0.032 | [-0.030, +0.096] |
-| vocab_grammar_coverage_cognitive | text_length | -0.246 | [-0.295, -0.197] * |
-| all_new | text_length | -0.246 | [-0.294, -0.198] * |
+| original_all | surface | +0.032 | [-0.030, +0.096] |
+| vocab_grammar_coverage_cognitive | surface | -0.246 | [-0.295, -0.197] * |
+| all_new | surface | -0.246 | [-0.294, -0.198] * |
 
 ### test, gradient boosting
 
 | first | second | difference in MAE | 95% CI |
 |---|---|---:|---|
-| vocab | text_length | +0.067 | [+0.031, +0.101] * |
-| grammar_coverage | text_length | +0.096 | [+0.060, +0.133] * |
-| cognitive | text_length | +0.033 | [+0.001, +0.067] * |
+| vocab | surface | +0.067 | [+0.031, +0.101] * |
+| grammar_coverage | surface | +0.096 | [+0.060, +0.133] * |
+| cognitive | surface | +0.033 | [+0.001, +0.067] * |
 | grammar_coverage | grammar_manual | -0.461 | [-0.502, -0.422] * |
 | grammar_coverage | grammar_rarity | -0.428 | [-0.472, -0.379] * |
 | grammar_all | grammar_coverage | +0.007 | [-0.004, +0.019] |
@@ -663,17 +663,17 @@ Bootstrap over the evaluation texts (1,000 resamples, the same resamples for bot
 | all_new | vocab_grammar_coverage_cognitive | +0.005 | [-0.004, +0.014] |
 | all_new | original_all | -0.138 | [-0.160, -0.113] * |
 | vocab | original_vocab_bins | -0.426 | [-0.473, -0.381] * |
-| original_all | text_length | +0.020 | [-0.017, +0.055] |
-| vocab_grammar_coverage_cognitive | text_length | -0.123 | [-0.153, -0.094] * |
-| all_new | text_length | -0.118 | [-0.146, -0.090] * |
+| original_all | surface | +0.020 | [-0.017, +0.055] |
+| vocab_grammar_coverage_cognitive | surface | -0.123 | [-0.153, -0.094] * |
+| all_new | surface | -0.118 | [-0.146, -0.090] * |
 
 ### valid (native), gradient boosting
 
 | first | second | difference in MAE | 95% CI |
 |---|---|---:|---|
-| vocab | text_length | +0.060 | [-0.012, +0.126] |
-| grammar_coverage | text_length | +0.013 | [-0.058, +0.087] |
-| cognitive | text_length | -0.019 | [-0.084, +0.045] |
+| vocab | surface | +0.060 | [-0.012, +0.126] |
+| grammar_coverage | surface | +0.013 | [-0.058, +0.087] |
+| cognitive | surface | -0.019 | [-0.084, +0.045] |
 | grammar_coverage | grammar_manual | -0.446 | [-0.505, -0.381] * |
 | grammar_coverage | grammar_rarity | -0.457 | [-0.536, -0.381] * |
 | grammar_all | grammar_coverage | +0.005 | [-0.014, +0.022] |
@@ -684,7 +684,7 @@ Bootstrap over the evaluation texts (1,000 resamples, the same resamples for bot
 | all_new | vocab_grammar_coverage_cognitive | +0.003 | [-0.012, +0.018] |
 | all_new | original_all | -0.119 | [-0.159, -0.081] * |
 | vocab | original_vocab_bins | -0.298 | [-0.379, -0.219] * |
-| original_all | text_length | -0.033 | [-0.099, +0.038] |
-| vocab_grammar_coverage_cognitive | text_length | -0.155 | [-0.210, -0.099] * |
-| all_new | text_length | -0.151 | [-0.209, -0.095] * |
+| original_all | surface | -0.033 | [-0.099, +0.038] |
+| vocab_grammar_coverage_cognitive | surface | -0.155 | [-0.210, -0.099] * |
+| all_new | surface | -0.151 | [-0.209, -0.095] * |
 

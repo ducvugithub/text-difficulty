@@ -23,7 +23,7 @@ On the FI texts alone the source-only model has MAE 1.299: it cannot separate FI
 | feature set | all | FI (n=310) | yle-selkouutiset (n=183) | HS (n=170) | yle (n=170) | easy_text (n=32) |
 |---|---:|---:|---:|---:|---:|---:|
 | source only | 0.466 | 1.299 | 0.000 | 0.000 | 0.000 | 0.000 |
-| text_length | 0.354 | 0.466 | 0.316 | 0.187 | 0.194 | 1.222 |
+| surface | 0.354 | 0.466 | 0.316 | 0.187 | 0.194 | 1.222 |
 | original_vocab_bins | 0.909 | 1.083 | 0.644 | 0.712 | 0.839 | 2.154 |
 | vocab | 0.471 | 0.557 | 0.374 | 0.303 | 0.427 | 1.316 |
 | grammar_manual | 0.835 | 0.926 | 0.724 | 0.711 | 0.695 | 1.995 |
@@ -45,7 +45,7 @@ FI test texts: 310, labels [2.0, 3.0, 4.0, 5.0, 6.0]. The dummy always predicts 
 | feature set | MAE | MAE 95% CI | accuracy | within one step | rho |
 |---|---:|---|---:|---:|---:|
 | dummy (median) | 1.287 | [1.187, 1.390] | 19.4% | 19.4% | |
-| text_length | 0.398 | [0.359, 0.439] | 46.8% | 67.4% | +0.92 |
+| surface | 0.398 | [0.359, 0.439] | 46.8% | 67.4% | +0.92 |
 | original_vocab_bins | 0.965 | [0.881, 1.059] | 19.0% | 35.8% | +0.54 |
 | vocab | 0.478 | [0.427, 0.531] | 42.9% | 67.4% | +0.88 |
 | grammar_manual | 0.849 | [0.776, 0.922] | 20.6% | 35.2% | +0.70 |
@@ -63,7 +63,7 @@ FI test texts: 310, labels [2.0, 3.0, 4.0, 5.0, 6.0]. The dummy always predicts 
 | feature set | MAE | MAE 95% CI | accuracy | within one step | rho |
 |---|---:|---|---:|---:|---:|
 | dummy (median) | 1.287 | [1.187, 1.390] | 19.4% | 19.4% | |
-| text_length | 0.466 | [0.418, 0.519] | 45.2% | 62.6% | +0.88 |
+| surface | 0.466 | [0.418, 0.519] | 45.2% | 62.6% | +0.88 |
 | original_vocab_bins | 1.083 | [0.992, 1.173] | 15.5% | 30.0% | +0.43 |
 | vocab | 0.557 | [0.497, 0.624] | 37.7% | 61.3% | +0.83 |
 | grammar_manual | 0.926 | [0.852, 1.009] | 16.8% | 35.2% | +0.63 |
@@ -78,14 +78,14 @@ FI test texts: 310, labels [2.0, 3.0, 4.0, 5.0, 6.0]. The dummy always predicts 
 
 ## Feature sets
 
-- `text_length`: text length only: words, characters, mean word length, mean sentence length
+- `surface`: surface measures: words, characters, mean word length, mean sentence length
 - `original_vocab_bins`: the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags)
 - `vocab`: vocab: lemma and stem frequency bins, English-looking share, lexical features
 - `grammar_manual`: grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels)
 - `grammar_rarity`: grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF)
 - `grammar_coverage`: grammar: the share of every concept and every topic in the text (one feature each)
 - `grammar_all`: grammar: manual levels, rarity and coverage together
-- `cognitive`: cognitive: Revita's syntax columns plus sentence count / mean / max / std length
+- `cognitive`: cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length
 - `vocab_grammar_coverage`: vocab and grammar coverage
 - `vocab_grammar_coverage_cognitive`: vocab, grammar coverage and cognitive
 - `all_new`: every new feature: vocab, all grammar, cognitive

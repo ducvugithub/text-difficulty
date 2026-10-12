@@ -29,11 +29,11 @@ MODELS = {
 }
 EVALS = ("test", "valid (native)")
 # the comparisons of interest: does a category beat the length control, does one add to the other, which grammar variant is better
-PAIRS = [("vocab", "text_length"), ("grammar_coverage", "text_length"), ("cognitive", "text_length"), ("grammar_coverage", "grammar_manual"),
+PAIRS = [("vocab", "surface"), ("grammar_coverage", "surface"), ("cognitive", "surface"), ("grammar_coverage", "grammar_manual"),
          ("grammar_coverage", "grammar_rarity"), ("grammar_all", "grammar_coverage"), ("vocab_grammar_coverage", "vocab"),
          ("vocab_grammar_coverage", "original_all"), ("vocab_grammar_coverage_cognitive", "vocab_grammar_coverage"),
          ("vocab_grammar_coverage_cognitive", "original_all"), ("all_new", "vocab_grammar_coverage_cognitive"), ("all_new", "original_all"),
-         ("vocab", "original_vocab_bins"), ("original_all", "text_length"), ("vocab_grammar_coverage_cognitive", "text_length"), ("all_new", "text_length")]
+         ("vocab", "original_vocab_bins"), ("original_all", "surface"), ("vocab_grammar_coverage_cognitive", "surface"), ("all_new", "surface")]
 
 
 def pct(x):

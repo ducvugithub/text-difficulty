@@ -25,7 +25,7 @@ from modeling.feature_sets import FEATURE_SETS, LABELS  # noqa: E402
 from utils.feature_store import feature_table  # noqa: E402
 
 BEST = "vocab_grammar_coverage_cognitive"
-REFERENCES = ["original_all", "text_length"]
+REFERENCES = ["original_all", "surface"]
 NOT_A_FOLD = ("FI",)  # kept in training and in the test set, but never the held-out source (FI has varied labels and may be translated text)
 REPORT = Path(__file__).resolve().parent / "reports" / "SOURCE_TRANSFER.md"
 SUMMARY = "@@summary@@"
@@ -86,13 +86,13 @@ def main():
     sn = scores(yt, pt)
     fold_test = [scores(*best[s]["test"])["mae"] for s in folds]
     ey, ep, es = excl_pooled(best)
-    ly, lp, ls = excl_pooled(runs["text_length"])
+    ly, lp, ls = excl_pooled(runs["surface"])
     diff = bootstrap_mae(ey, ep) - bootstrap_mae(ly, lp)
     lo, hi = ci(diff)
-    outcome = "no clear difference" if lo <= 0 <= hi else ("best set better" if hi < 0 else "length alone better")
+    outcome = "no clear difference" if lo <= 0 <= hi else ("best set better" if hi < 0 else "surface baseline better")
     summary = "\n".join([
         f"- Original test set: the normal model misses by **{sn['mae']:.3f}**. With one source left out of training: {min(fold_test):.3f} to {max(fold_test):.3f}.",
-        f"- On the left-out source itself: **{es['mae']:.3f}** (text length alone: {ls['mae']:.3f}, {outcome}).",
+        f"- On the left-out source itself: **{es['mae']:.3f}** (surface baseline: {ls['mae']:.3f}, {outcome}).",
         "- `yle` and `HS` are graded well, since they share a label (5.5). `easy_text` and `yle-selkouutiset` are graded badly, since no other source has their label.", ""])
 
     L = ["# Source-transfer check: grading a source the model has never seen", "",

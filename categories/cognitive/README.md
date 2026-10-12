@@ -5,7 +5,7 @@ How much the reader has to hold in mind: sentence length, nesting, dependency di
 | signal | what it gives | needs |
 |---|---|---|
 | `sentence_length` | sentence count, mean / max / std length in words | nothing (plain sentence split) |
-| `parse_precomputed` | tree depth, distinct POS and tokens per sentence from the dependency parse, precomputed by Revita's pipeline | the splits' precomputed columns |
+| `parse_old` | tree depth, distinct POS and tokens per sentence from the dependency parse, precomputed by Revita's pipeline | the splits' precomputed columns |
 | `dependency` | tree depth, dependency distance, clauses and subordinate clauses per sentence | the Turku parser server (`shared/parser_client.py`; reached from the Revita hosts, e.g. through an SSH tunnel) |
 
 - `cognitive_construct.py` — `CognitiveDiffFeatureConstruct`, composes the signals (registered in `../utils/registry.py`).

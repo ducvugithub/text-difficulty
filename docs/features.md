@@ -47,7 +47,7 @@ Listening exercises (`Topic: Listen ...`, `Listening-*`) are Revita exercise typ
 | signal | features | meaning | status |
 |---|---|---|---|
 | `sentence_length` | `cognitive_sent_{n_sentences, mean_len, max_len, std_len}` | sentence count and length in words, from a plain sentence split (no parser) | done |
-| `parse_precomputed` | `cognitive_parse_{tree_depth, distinct_pos, sentence_length}` | the three syntax columns Revita's pipeline computed (average tree depth, distinct POS per sentence, tokens per sentence); splits only | done |
+| `parse_old` | `cognitive_parse_{tree_depth, distinct_pos, sentence_length}` | the three syntax columns Revita's pipeline computed (average tree depth, distinct POS per sentence, tokens per sentence); splits only | done |
 | `dependency` | `cognitive_dep_{mean_tree_depth, max_tree_depth, mean_distance, max_distance, clauses_per_sentence, subordinate_per_sentence, mean_distinct_pos}` | tree depth, dependency distance (Gibson 1998), clauses (finite verbs) and subordinate clauses per sentence, from the Turku parser | code written, **not run on the splits** (needs the parser server and takes hours) |
 
 ## Where features are registered

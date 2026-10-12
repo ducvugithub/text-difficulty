@@ -29,7 +29,7 @@ MATRIX = [
     ("grammar: rarity", SIGNAL("grammar", "rarity_concepts")),
     ("grammar: coverage", SIGNAL("grammar", "coverage_concepts")),
     ("cognitive: sentence length", SIGNAL("cognitive", "sentence_length")),
-    ("parse features (old)", lambda spec: spec.get("original") == "all" or SIGNAL("cognitive", "parse_precomputed")(spec)),
+    ("parse features (old)", lambda spec: spec.get("original") == "all" or SIGNAL("cognitive", "parse_old")(spec)),
     ("original: vocab bins (11)", lambda spec: spec.get("original") == "all" or bool(spec.get("columns"))),
     ("original: grammar columns (388)", lambda spec: spec.get("original") == "all"),
     ("text length (4)", lambda spec: bool(spec.get("surface"))),
@@ -41,7 +41,7 @@ PIECES = [  # (name, what it gives, signal or None, number of features for the p
     ("grammar: rarity", "How rare the text's grammar concepts and topics are in Revita's Finnish stories: share in each rarity bin, share never seen, mean IDF", [("grammar", "rarity_concepts"), ("grammar", "rarity_topics")], 17),
     ("grammar: coverage", "One feature per grammar concept (268) and per syllabus topic (133): its share of the text", [("grammar", "coverage_concepts"), ("grammar", "coverage_topics")], 401),
     ("cognitive: sentence length", "Number of sentences, and the mean, longest and spread of sentence length in words", [("cognitive", "sentence_length")], None),
-    ("parse features (old)", "Tree depth, distinct parts of speech and tokens per sentence from the dependency parse; computed by an older Revita run and come with the data", [("cognitive", "parse_precomputed")], None),
+    ("parse features (old)", "Tree depth, distinct parts of speech and tokens per sentence from the dependency parse; computed by an older Revita run and come with the data", [("cognitive", "parse_old")], None),
     ("original: vocab bins (11)", "Out-of-vocabulary share and the share of words in each of 10 frequency bags, old definition (come with the data)", None, 11),
     ("original: grammar columns (388)", "Each Revita concept's share and each syllabus topic's count, from an older Revita run (come with the data)", None, 388),
     ("text length (4)", "Words, characters, mean word length, mean sentence length; all computed here. A control: how far does length alone get?", None, 4),
@@ -250,7 +250,8 @@ def main():
     L += ["", "### text length (4)", "", "`n_words`, `n_chars`, `mean_word_len`, `mean_sentence_len`: words, characters, mean characters per word and mean words per sentence."]
     L += ["", "## Where the raw numbers are", "",
           "`modeling/reports/runs/` has the raw run outputs: per-label results, validation results and the paired comparisons (`train_native_main.md`, `train_all_main.md`), "
-          "a source and length check (`within_source.md`), and the first vocabulary-only experiment (`first_vocab_only_*.md`).", "",
+          "a source and length check (`within_source.md`), and the first vocabulary-only experiment (`first_vocab_only_*.md`). "
+          "A separate report, `SOURCE_TRANSFER.md`, tests how the best feature set transfers to a source it has never seen.", "",
           "## How this report was produced", "", "```", "python scripts/build_features.py --sets all_new",
           "python modeling/run_experiment.py --train train_native --tag main", "python modeling/run_experiment.py --train train_all --tag main",
           "python modeling/make_results_report.py", "```", ""]

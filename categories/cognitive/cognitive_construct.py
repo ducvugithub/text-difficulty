@@ -2,7 +2,7 @@
 
   sentence_length  signals/sentence_length/   sentence count, mean / max / std length (plain sentence split, no parser)
   dependency       signals/dependency/        tree depth, dependency distance, clauses and subordination (needs the parser server)
-  parse_precomputed    signals/parse_precomputed/     Revita's tree depth, distinct POS and sentence length columns (splits only)
+  parse_old    signals/parse_old/     Revita's tree depth, distinct POS and sentence length columns (splits only)
 
     CognitiveDiffFeatureConstruct()                           the signals that need no parser (sentence_length)
     CognitiveDiffFeatureConstruct(signals=["dependency"])     parse the texts (categories/cognitive/shared/parser_client.py)

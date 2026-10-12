@@ -338,7 +338,7 @@ The same concepts and topics as the coverage features above, from an older Revit
 
 ## Where the raw numbers are
 
-`modeling/reports/runs/` has the raw run outputs: per-label results, validation results and the paired comparisons (`train_native_main.md`, `train_all_main.md`), a source and length check (`within_source.md`), and the first vocabulary-only experiment (`first_vocab_only_*.md`).
+`modeling/reports/runs/` has the raw run outputs: per-label results, validation results and the paired comparisons (`train_native_main.md`, `train_all_main.md`), a source and length check (`within_source.md`), and the first vocabulary-only experiment (`first_vocab_only_*.md`). A separate report, `SOURCE_TRANSFER.md`, tests how the best feature set transfers to a source it has never seen.
 
 ## How this report was produced
 

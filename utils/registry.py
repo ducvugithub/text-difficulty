@@ -25,7 +25,7 @@ SIGNALS = {
     "cognitive": {
         "sentence_length": ("categories.cognitive.signals.sentence_length.sentence_length_features", "SentenceLengthFeatures"),
         "dependency": ("categories.cognitive.signals.dependency.dependency_features", "DependencyFeatures"),
-        "parse_precomputed": ("categories.cognitive.signals.parse_precomputed.parse_precomputed_features", "PrecomputedParseFeatures"),
+        "parse_old": ("categories.cognitive.signals.parse_old.parse_old_features", "OldParseFeatures"),
     },
 }
 DEFAULTS = {

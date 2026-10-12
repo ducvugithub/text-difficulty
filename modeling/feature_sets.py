@@ -11,7 +11,7 @@ VOCAB = [("vocab", "freq"), ("vocab", "lexical")]
 MANUAL = [("grammar", "manual_concepts_levels"), ("grammar", "manual_topics_levels")]
 RARITY = [("grammar", "rarity_concepts"), ("grammar", "rarity_topics")]
 COVERAGE = [("grammar", "coverage_concepts"), ("grammar", "coverage_topics")]
-COGNITIVE = [("cognitive", "parse_precomputed"), ("cognitive", "sentence_length")]
+COGNITIVE = [("cognitive", "parse_old"), ("cognitive", "sentence_length")]
 
 FEATURE_SETS = {
     # controls and the original features that come with the data

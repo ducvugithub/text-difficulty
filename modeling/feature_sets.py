@@ -1,76 +1,53 @@
-"""Named feature sets for the experiments.
+"""Named feature sets for the experiments, built by utils/feature_store.py.
 
-The data files carry 402 precomputed features. The experiments swap only the 11 old vocab columns (OOV_coverage and
-vocab_bag_k_coverage) for the new vocab bin features and leave everything else unchanged:
-
-  no_vocab             the original features without the old vocab columns (reference)
-  old_vocab_bins       the 402 original features: no_vocab + the 11 old vocab columns (baseline)
-  new_lemma_bins       no_vocab + the lemma bin features (OOV, English-looking share, bin coverage, mean log count)
-  new_stem_bins        no_vocab + the stem bin features (the same, per stem)
-  new_lemma_stem_bins  no_vocab + both
-  new_bins_lexical     no_vocab + both bin sets + the lexical features (word length, compounds, derivation, diversity)
-  surface              control for length shortcuts: text length, word length, average sentence length
-Source and origin are never used as features.
-The new features come from outputs/vocab_text_features_{split}.csv (step 9).
+A set is made of registered signals (vocab, grammar, cognitive), and optionally the original data columns ("original"), chosen
+data columns ("columns") and the text-length control ("surface"). Source and origin are never features. To add a set, add an
+entry to FEATURE_SETS here (and to EXPERIMENT_SETS to include it by default; LABELS gives its readable name for reports).
 """
-import sys
-from pathlib import Path
+from utils.dataset import OLD_VOCAB
+from utils.feature_store import feature_table
 
-import pandas as pd
+VOCAB = [("vocab", "freq"), ("vocab", "lexical")]
+MANUAL = [("grammar", "manual_concepts_levels"), ("grammar", "manual_topics_levels")]
+RARITY = [("grammar", "rarity_concepts"), ("grammar", "rarity_topics")]
+COVERAGE = [("grammar", "coverage_concepts"), ("grammar", "coverage_topics")]
+COGNITIVE = [("cognitive", "parse_precomputed"), ("cognitive", "sentence_length")]
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from dataset import OLD_VOCAB, ROOT, load_split, original_feature_columns, surface_features  # noqa: E402
-
-_cache = {}
-
-
-def _original_columns():
-    if "orig" not in _cache:
-        _cache["orig"] = original_feature_columns()
-    return _cache["orig"]
-
-
-def new_bins(split):
-    """(lemma bin features, stem bin features, lexical features) of a split."""
-    df = pd.read_csv(ROOT / "outputs" / f"vocab_text_features_{split}.csv", index_col="row").drop(columns=["label"])
-    lemma = [c for c in df.columns if c.startswith("lemma_") or c == "mean_log_lemma_freq"]
-    stem = [c for c in df.columns if c.startswith("stem_") or c == "mean_log_stem_freq"]
-    lexical = [c for c in df.columns if c not in lemma and c not in stem and c != "borrowed_coverage"]
-    return df[lemma], df[stem], df[lexical]
-
-
-def feature_table(split, name):
-    """(X, df): the feature matrix of a split for a feature set, and the split's metadata frame."""
-    df = load_split(split)
-    orig = _original_columns()
-    no_vocab = df[[c for c in orig if c not in OLD_VOCAB]]
-    lemma_bins, stem_bins, lexical = new_bins(split)
-    sets = {
-        "no_vocab": lambda: no_vocab,
-        "old_vocab_bins": lambda: df[orig],
-        "new_lemma_bins": lambda: pd.concat([no_vocab, lemma_bins], axis=1),
-        "new_stem_bins": lambda: pd.concat([no_vocab, stem_bins], axis=1),
-        "new_lemma_stem_bins": lambda: pd.concat([no_vocab, lemma_bins, stem_bins], axis=1),
-        "new_bins_lexical": lambda: pd.concat([no_vocab, lemma_bins, stem_bins, lexical], axis=1),
-        "surface": lambda: pd.concat([surface_features(df), df[["average_sentence_length"]]], axis=1),
-    }
-    return sets[name](), df
-
-
-FEATURE_SETS = ["no_vocab", "old_vocab_bins", "new_lemma_bins", "new_stem_bins", "new_lemma_stem_bins", "new_bins_lexical", "surface"]
-DESCRIPTIONS = {
-    "no_vocab": "the original features without the old vocab columns: syntax averages, grammar, morphology and topic counts",
-    "old_vocab_bins": "no_vocab plus the 11 old vocab columns (OOV and bag coverage): the baseline",
-    "new_lemma_bins": "no_vocab plus the lemma bin features: OOV, English-looking share, share of words per bin, mean log count",
-    "new_stem_bins": "no_vocab plus the stem bin features: the same measures, counted per stem",
-    "new_lemma_stem_bins": "no_vocab plus the lemma and the stem bin features",
-    "new_bins_lexical": "no_vocab plus both bin sets and the lexical features: word length, compounds, derivation suffixes, lexical diversity",
-    "surface": "text length, characters, word length and average sentence length, a control for length shortcuts",
+FEATURE_SETS = {
+    # controls and the original features that come with the data
+    "text_length": {"description": "text length only: words, characters, mean word length, mean sentence length", "surface": True},
+    "original_vocab_bins": {"description": "the 11 old vocabulary-bin columns that come with the data (OOV and 10 bags)", "columns": OLD_VOCAB},
+    "original_all": {"description": "the 402 original columns: syntax averages, old vocab bins, concept and topic columns", "original": "all"},
+    # one category each
+    "vocab": {"description": "vocab: lemma and stem frequency bins, English-looking share, lexical features", "signals": VOCAB},
+    "grammar_manual": {"description": "grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels)", "signals": MANUAL},
+    "grammar_rarity": {"description": "grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF)", "signals": RARITY},
+    "grammar_coverage": {"description": "grammar: the share of every concept and every topic in the text (one feature each)", "signals": COVERAGE},
+    "grammar_all": {"description": "grammar: manual levels, rarity and coverage together", "signals": MANUAL + RARITY + COVERAGE},
+    "cognitive": {"description": "cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length", "signals": COGNITIVE},
+    "cognitive_dependency": {"description": "cognitive: tree depth, dependency distance, clauses from our own parse (needs the parser)", "signals": [("cognitive", "dependency")]},
+    # combinations
+    "vocab_grammar_coverage": {"description": "vocab and grammar coverage", "signals": VOCAB + COVERAGE},
+    "vocab_grammar_coverage_cognitive": {"description": "vocab, grammar coverage and cognitive", "signals": VOCAB + COVERAGE + COGNITIVE},
+    "all_new": {"description": "every new feature: vocab, all grammar, cognitive", "signals": VOCAB + MANUAL + RARITY + COVERAGE + COGNITIVE},
 }
+
+# the sets an experiment compares by default (--sets chooses others), in the order of the reports
+EXPERIMENT_SETS = ["text_length", "original_vocab_bins", "vocab", "grammar_manual", "grammar_rarity", "grammar_coverage", "grammar_all", "cognitive",
+                   "vocab_grammar_coverage", "vocab_grammar_coverage_cognitive", "all_new", "original_all"]
+# readable names for reports: (new) = built here, (old) = the columns that come with the data
+LABELS = {
+    "text_length": "length only (new)", "original_vocab_bins": "vocab_bins (old)", "original_all": "all (old)",
+    "vocab": "vocab (new)", "grammar_manual": "grammar_manual (new)", "grammar_rarity": "grammar_rarity (new)",
+    "grammar_coverage": "grammar_coverage (new)", "grammar_all": "grammar_all (new)", "cognitive": "cognitive (new)",
+    "cognitive_dependency": "cognitive_dependency (new)", "vocab_grammar_coverage": "vocab + grammar_coverage (new)",
+    "vocab_grammar_coverage_cognitive": "vocab + grammar_coverage + cognitive (new)", "all_new": "all (new)",
+}
+DESCRIPTIONS = {name: spec["description"] for name, spec in FEATURE_SETS.items()}
 
 
 def aligned_tables(train_split, eval_splits, name):
     """X for the train split and every eval split, with identical columns (needed for one-hot features)."""
-    tables = {s: feature_table(s, name) for s in [train_split, *eval_splits]}
+    tables = {s: feature_table(s, FEATURE_SETS[name]) for s in [train_split, *eval_splits]}
     cols = list(tables[train_split][0].columns)
     return {s: (X.reindex(columns=cols, fill_value=0.0), df) for s, (X, df) in tables.items()}

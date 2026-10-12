@@ -4,9 +4,9 @@ data/
 # large generated artifacts
 **/outputs/*
 !**/outputs/.gitkeep
-categories/vocab/signals/*/outputs/*
-!categories/vocab/signals/*/outputs/.gitkeep
-categories/vocab/signals/vocab_freq/cleaned/*
-!categories/vocab/signals/vocab_freq/cleaned/.gitkeep
+curated/categories/vocab/signals/*/outputs/*
+!curated/categories/vocab/signals/*/outputs/.gitkeep
+curated/categories/vocab/signals/vocab_freq/cleaned/*
+!curated/categories/vocab/signals/vocab_freq/cleaned/.gitkeep
 .venv/
 __pycache__/

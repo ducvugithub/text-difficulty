@@ -7,12 +7,15 @@ grammar / morphology / topic counts). Columns that came from an earlier model (`
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 SPLIT_FILES = {"train": "Fi_train.csv", "valid": "Fi_valid.csv", "test": "Fi_test.csv"}
 META = ["text", "label", "origine", "source"]
+# the two training sets every experiment uses (the test set is always the real-Finnish test split)
+TRAIN_SETS = {"train_native": "real-Finnish rows (2,332 texts)", "train_all": "all rows (8,293 texts)"}
 OLD_VOCAB = ["OOV_coverage"] + [f"vocab_bag_{k}_coverage" for k in range(1, 11)]
 _WORD = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*")
 
@@ -30,7 +33,7 @@ def original_feature_columns():
 
 def surface_features(df):
     """Plain length features computed from the text: words, characters, mean word length, mean sentence length in words."""
-    from curated.categories.cognitive.shared.sentences import split_sentences
+    from curated_features.categories.cognitive.shared.sentences import split_sentences
     words = [_WORD.findall(str(t)) for t in df["text"]]
     sentences = [split_sentences(str(t)) for t in df["text"]]
     return pd.DataFrame({
@@ -39,3 +42,15 @@ def surface_features(df):
         "mean_word_len": [sum(map(len, w)) / len(w) if w else 0.0 for w in words],
         "mean_sentence_len": [len(w) / max(len(s), 1) for w, s in zip(words, sentences)],
     }, index=df.index)
+
+
+def native_mask(df) -> np.ndarray:
+    """True for the real-Finnish rows (origine "Real"); the other rows are translated from Russian."""
+    return (df["origine"] == "Real").to_numpy()
+
+
+def train_mask(df, train: str) -> np.ndarray:
+    """The rows of the train split a training set uses: "train_native" = the real-Finnish rows, "train_all" = every row."""
+    if train not in TRAIN_SETS:
+        raise ValueError(f"train must be one of {list(TRAIN_SETS)}")
+    return native_mask(df) if train == "train_native" else np.ones(len(df), dtype=bool)

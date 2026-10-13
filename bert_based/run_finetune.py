@@ -4,11 +4,12 @@ A BERT model with a linear regression head (one output, mean squared error on th
 every training text, each with its text's label; a text is predicted as the average of its windows' predictions. The epoch is chosen on the real-Finnish valid texts, so the
 test set is never used to choose anything. Graded on the same 865 real-Finnish test texts as the curated experiments.
 
-    python bert_based/run_finetune.py --train train_native            real-Finnish train texts (2,332)
-    python bert_based/run_finetune.py --train train_all               all train texts (8,293)
-    python bert_based/run_finetune.py --train train_native --limit 64 --epochs 1      a quick trial (nothing is saved)
+    python bert_based/run_finetune.py --train train_native --lora     LoRA: only small adapter matrices (and the head) are trained, the BERT weights are frozen
+    python bert_based/run_finetune.py --train train_native            full fine-tuning: every weight is trained (heavier)
+    python bert_based/run_finetune.py --train train_all --lora        all train texts (8,293)
+    python bert_based/run_finetune.py --train train_native --lora --limit 64 --epochs 1      a quick trial (nothing is saved)
 
-Each run writes bert_based/reports/runs/finetune_<train>.json; the report bert_based/reports/BERT_FINETUNE.md is rebuilt from all runs that exist.
+Each run writes bert_based/reports/runs/finetune_<lora|full>_<train>.json; the report bert_based/reports/BERT_FINETUNE.md is rebuilt from all runs that exist.
 """
 import argparse
 import json
@@ -29,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "bert_based" / "reports" / "runs"
 REPORT = ROOT / "bert_based" / "reports" / "BERT_FINETUNE.md"
 CURATED_RUNS = ROOT / "curated_features" / "modeling" / "reports" / "runs"
+VARIANTS = {"lora": "BERT, fine-tuned with LoRA", "full": "BERT, fully fine-tuned"}
 CURATED_CONTEXT = [("vocab_grammar_coverage_cognitive", "best curated set: vocab + grammar_coverage + cognitive (new)"),
                    ("original_all", "curated reference: all (old)"), ("surface", "curated reference: surface (new)")]
 
@@ -69,15 +71,33 @@ def predict(model, tokenizer, texts, device, mean, std, window=WINDOW, batch_siz
     return total / np.maximum(count, 1) * std + mean
 
 
+def build_model(name, lora, rank=8, alpha=16, dropout=0.1):
+    """BERT with a one-output regression head. With `lora`, the BERT weights are frozen and small low-rank adapters on the attention
+    query and value matrices are trained instead (together with the head). Returns (model, trainable parameters, total parameters)."""
+    from transformers import AutoModelForSequenceClassification
+
+    model = AutoModelForSequenceClassification.from_pretrained(name, num_labels=1)
+    if lora:
+        from peft import LoraConfig, TaskType, get_peft_model
+
+        model = get_peft_model(model, LoraConfig(task_type=TaskType.SEQ_CLS, r=rank, lora_alpha=alpha, lora_dropout=dropout, target_modules=["query", "value"]))
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return model, trainable, sum(p.numel() for p in model.parameters())
+
+
 def run(args):
     import torch
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
+    from transformers import AutoTokenizer, get_linear_schedule_with_warmup
 
     torch.manual_seed(0)
     rng = np.random.default_rng(0)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    model = AutoModelForSequenceClassification.from_pretrained(args.model, num_labels=1).to(device)
+    variant = "lora" if args.lora else "full"
+    lr = args.lr or (2e-4 if args.lora else 2e-5)  # adapters need a larger learning rate than full fine-tuning
+    model, trainable, total_params = build_model(args.model, args.lora, args.lora_rank, args.lora_alpha)
+    model.to(device)
+    print(f"{variant}: {trainable:,} of {total_params:,} parameters are trained ({100 * trainable / total_params:.1f}%)", flush=True)
 
     train_df, valid_df, test_df = load_split("train"), load_split("valid"), load_split("test")
     train_df = train_df[train_mask(train_df, args.train)]
@@ -88,7 +108,7 @@ def run(args):
     wins = windows_of(tokenizer, texts, args.window)
     target = {i: (labels[i] - mean) / std for i in range(len(texts))}
     steps_per_epoch = int(np.ceil(len(wins) / (args.batch_size * args.accum)))
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=lr, weight_decay=0.01)
     scheduler = get_linear_schedule_with_warmup(optimizer, int(0.1 * steps_per_epoch * args.epochs), steps_per_epoch * args.epochs)
     print(f"{args.train}: {len(texts)} texts -> {len(wins)} windows, {steps_per_epoch} steps per epoch, device {device}", flush=True)
 
@@ -119,14 +139,15 @@ def run(args):
         if best is None or valid_mae < best[0]:  # keep the predictions of the epoch that is best on valid
             best = (valid_mae, epoch, predict(model, tokenizer, test_texts, device, mean, std, args.window))
     _, best_epoch, test_pred = best
-    result = {"model": args.model, "train": args.train, "epochs": args.epochs, "lr": args.lr, "batch_size": args.batch_size * args.accum, "window": args.window, "history": history, "best_epoch": best_epoch,
+    result = {"model": args.model, "variant": variant, "train": args.train, "epochs": args.epochs, "lr": lr, "lora_rank": args.lora_rank if args.lora else None,
+              "trainable_parameters": trainable, "total_parameters": total_params, "batch_size": args.batch_size * args.accum, "window": args.window, "history": history, "best_epoch": best_epoch,
               "windows": len(wins), "seconds": time.time() - start, "test": {k: v for k, v in metrics(test_y, test_pred).items() if k != "per_label"},
               "test_ci": ci(bootstrap_mae(test_y, test_pred)), "test_pred": [float(x) for x in test_pred]}
     print(f"best epoch {best_epoch}: test MAE {result['test']['mae']:.3f}", flush=True)
     if not args.limit:
         RUNS.mkdir(parents=True, exist_ok=True)
-        (RUNS / f"finetune_{args.train}.json").write_text(json.dumps(result), encoding="utf-8")
-        predictions.save("bert", "finetune", "regression_head", args.train, test_y, test_pred)
+        (RUNS / f"finetune_{variant}_{args.train}.json").write_text(json.dumps(result), encoding="utf-8")
+        predictions.save("bert", "finetune", f"regression_head_{variant}", args.train, test_y, test_pred)
         write_report()
 
 
@@ -139,40 +160,58 @@ def curated_context(train):
 
 
 def write_report():
-    runs = {t: json.loads((RUNS / f"finetune_{t}.json").read_text(encoding="utf-8")) for t in TRAIN_SETS if (RUNS / f"finetune_{t}.json").exists()}
+    runs = {}
+    for variant in VARIANTS:
+        for t in TRAIN_SETS:
+            path = RUNS / f"finetune_{variant}_{t}.json"
+            if path.exists():
+                runs[(variant, t)] = json.loads(path.read_text(encoding="utf-8"))
     if not runs:
         return
     y_test = load_split("test")["label"].to_numpy()
     first = next(iter(runs.values()))
-    L = ["# BERT with a regression head, fine-tuned", "",
-         f"Generated by `bert_based/run_finetune.py`. Model: `{first['model']}`, the whole model is trained.", "", "## Summary", ""]
-    for t, r in runs.items():
-        L.append(f"- Trained on {TRAIN_SETS[t]}: average miss **{r['test']['mae']:.3f}** [{r['test_ci'][0]:.3f}, {r['test_ci'][1]:.3f}] on the test set (epoch {r['best_epoch']} of {r['epochs']}, "
-                 f"chosen on the real-Finnish valid texts).")
+    L = ["# BERT with a regression head, fine-tuned", "", f"Generated by `bert_based/run_finetune.py`. Model: `{first['model']}`.", "", "## Summary", ""]
+    for (v, t), r in runs.items():
+        L.append(f"- {VARIANTS[v]}, trained on {TRAIN_SETS[t]}: average miss **{r['test']['mae']:.3f}** [{r['test_ci'][0]:.3f}, {r['test_ci'][1]:.3f}] on the test set "
+                 f"(epoch {r['best_epoch']} of {r['epochs']}, chosen on the real-Finnish valid texts).")
     L += ["", "## How to read the numbers", "",
           "- **Average miss (MAE)**: average distance between predicted and true label; smaller is better. One label step is 0.5.",
           "- **Exactly right / within one step**: the prediction, rounded to the nearest half step, equals the label / is off by at most 0.5.",
           "- **95% interval**: from resampling the 865 test texts; overlapping intervals may be noise.", "",
           "## Setup", "",
-          f"- BERT with one linear output (regression), trained with mean squared error on the label standardised by the training mean and spread, AdamW, learning rate {first['lr']:g}, "
-          f"effective batch size {first['batch_size']}, {first['epochs']} epochs, linear warm-up and decay.",
-          f"- Training examples are the windows of at most {first.get('window', WINDOW)} word-pieces of every training text; a text is predicted as the average over its windows.",
+          "- BERT with one linear output (regression), trained with mean squared error on the label standardised by the training mean and spread, AdamW, linear warm-up and decay."]
+    for v in VARIANTS:
+        r = next((x for (vv, _), x in runs.items() if vv == v), None)
+        if r:
+            what = (f"**LoRA**: the BERT weights are frozen; small low-rank adapters (rank {r['lora_rank']}) on the attention query and value matrices are trained, together with the head. "
+                    f"{r['trainable_parameters']:,} of {r['total_parameters']:,} parameters ({100 * r['trainable_parameters'] / r['total_parameters']:.1f}%) are trained."
+                    if v == "lora" else f"**Full**: every weight is trained ({r['trainable_parameters']:,} parameters).")
+            L.append(f"- {what} Learning rate {r['lr']:g}, effective batch size {r['batch_size']}, {r['epochs']} epochs.")
+    L += [f"- Training examples are the windows of at most {first.get('window', WINDOW)} word-pieces of every training text; a text is predicted as the average over its windows.",
           "- The epoch is chosen on the real-Finnish valid texts (263), so the test set is never used to choose anything.",
           "- Test set: the same 865 real-Finnish texts as in the curated results, so the numbers are comparable with `curated_features/modeling/reports/RESULTS.md`.", "",
           "## Results", ""]
-    for t, r in runs.items():
-        L += [f"### Trained on {TRAIN_SETS[t]}", "", "| model | average miss (MAE) [95% interval] | in label steps | exactly right | within one step |", "|---|---|---:|---:|---:|",
-              f"| **BERT, fine-tuned** | {r['test']['mae']:.3f} [{r['test_ci'][0]:.3f}, {r['test_ci'][1]:.3f}] | {steps(r['test']['mae'])} | {pct(r['test']['accuracy'])} | {pct(r['test']['accuracy_1step'])} |"]
+    for t in TRAIN_SETS:
+        mine = {v: runs[(v, t)] for v in VARIANTS if (v, t) in runs}
+        if not mine:
+            continue
+        L += [f"### Trained on {TRAIN_SETS[t]}", "", "| model | average miss (MAE) [95% interval] | in label steps | exactly right | within one step |", "|---|---|---:|---:|---:|"]
+        for v, r in mine.items():
+            L.append(f"| **{VARIANTS[v]}** | {r['test']['mae']:.3f} [{r['test_ci'][0]:.3f}, {r['test_ci'][1]:.3f}] | {steps(r['test']['mae'])} | {pct(r['test']['accuracy'])} | {pct(r['test']['accuracy_1step'])} |")
         for label, c in curated_context(t):
             L.append(f"| *{label}* | {c[3]} {c[4]} | {steps(c[3])} | {c[5]} | {c[6]} |")
-        L += ["", "Per epoch (valid MAE on the real-Finnish valid texts):", "", "| epoch | train loss | valid MAE |", "|---:|---:|---:|"]
-        L += [f"| {h['epoch']}{' (chosen)' if h['epoch'] == r['best_epoch'] else ''} | {h['train_loss']:.3f} | {h['valid_mae']:.3f} |" for h in r["history"]]
-        L += [f"", f"Training took {r['seconds'] / 60:.0f} minutes.", ""]
-    if "train_native" in runs:
-        L += ["### Confusion matrix (trained on real-Finnish rows)", "",
+        for v, r in mine.items():
+            L += ["", f"{VARIANTS[v]}: per epoch (valid MAE on the real-Finnish valid texts), training took {r['seconds'] / 60:.0f} minutes:", "", "| epoch | train loss | valid MAE |", "|---:|---:|---:|"]
+            L += [f"| {h['epoch']}{' (chosen)' if h['epoch'] == r['best_epoch'] else ''} | {h['train_loss']:.3f} | {h['valid_mae']:.3f} |" for h in r["history"]]
+        L.append("")
+    native = {v: r for (v, t), r in runs.items() if t == "train_native"}
+    if native:
+        v = min(native, key=lambda k: native[k]["test"]["mae"])
+        L += [f"### Confusion matrix ({VARIANTS[v]}, trained on real-Finnish rows)", "",
               "Each row is the true label, each column the predicted label (rounded to the nearest half step). A row adds up to 100%; the **bold** cell is the share predicted exactly right.", ""]
-        L += confusion_md(y_test, np.array(runs["train_native"]["test_pred"]))
-    L += ["", "## Reproduce", "", "```", "python bert_based/run_finetune.py --train train_native", "python bert_based/run_finetune.py --train train_all", "```", ""]
+        L += confusion_md(y_test, np.array(native[v]["test_pred"]))
+    L += ["", "## Reproduce", "", "```", "python bert_based/run_finetune.py --train train_native --lora", "python bert_based/run_finetune.py --train train_all --lora",
+          "python bert_based/run_finetune.py --train train_native      # full fine-tuning, optional and heavier", "```", ""]
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text("\n".join(L), encoding="utf-8")
     print("report ->", REPORT)
@@ -183,7 +222,10 @@ if __name__ == "__main__":
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--train", default="train_native", choices=list(TRAIN_SETS))
     ap.add_argument("--epochs", type=int, default=3)
-    ap.add_argument("--lr", type=float, default=2e-5)
+    ap.add_argument("--lora", action="store_true", help="train small LoRA adapters (and the head) instead of every weight")
+    ap.add_argument("--lora-rank", type=int, default=8)
+    ap.add_argument("--lora-alpha", type=int, default=16)
+    ap.add_argument("--lr", type=float, default=None, help="default 2e-4 with --lora, 2e-5 without")
     ap.add_argument("--batch-size", type=int, default=8, help="windows per step on the device (memory); the effective batch is batch-size x accum")
     ap.add_argument("--accum", type=int, default=2, help="steps whose gradients are added before one update")
     ap.add_argument("--window", type=int, default=WINDOW, help="word-pieces per window (shorter = less memory)")

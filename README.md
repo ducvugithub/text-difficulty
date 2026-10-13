@@ -1,6 +1,6 @@
 # text-difficulty
 
-Predicting how difficult a Finnish text is, in two ways: with hand-curated features (`curated_features/`) and with BERT (`bert_based/`).
+Predicting how difficult a Finnish text is, in two ways (overall result: [SUMMARY.md](SUMMARY.md)): with hand-curated features (`curated_features/`) and with BERT (`bert_based/`).
 
 ```
 text-difficulty/
@@ -37,7 +37,7 @@ Uses the Finnish BERT model `TurkuNLP/bert-base-finnish-cased-v1` (`--model` cho
 
 - `bert_based/embeddings.py`: frozen embeddings, one vector per text and layer, cached in `outputs/embeddings/` (`python bert_based/embeddings.py`).
 - `bert_based/run_layers.py`: ridge regression on each layer's embedding; writes `bert_based/reports/BERT_LAYERS.md`.
-- `bert_based/run_finetune.py`: BERT with a regression head, fine-tuned; writes `bert_based/reports/BERT_FINETUNE.md` (needs a machine with free memory: about an hour per training set).
+- `bert_based/run_finetune.py`: BERT with a regression head, fine-tuned; `--lora` trains only small adapters (0.24% of the weights), without it every weight is trained. Writes `bert_based/reports/BERT_FINETUNE.md` (needs a machine with free memory).
 
 ## Setup
 

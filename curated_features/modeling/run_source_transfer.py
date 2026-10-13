@@ -78,22 +78,13 @@ def main():
     folds = [s for s in meta["source"].value_counts().index if s not in NOT_A_FOLD]
     best = runs[BEST]
 
-    def excl_pooled(res):
-        y = np.concatenate([res[s]["excl"][0] for s in folds])
-        p = np.concatenate([res[s]["excl"][1] for s in folds])
-        return y, p, scores(y, p)
-
     yt, pt = best["none"]["test"]
     sn = scores(yt, pt)
     fold_test = [scores(*best[s]["test"])["mae"] for s in folds]
-    ey, ep, es = excl_pooled(best)
-    ly, lp, ls = excl_pooled(runs["surface"])
-    diff = bootstrap_mae(ey, ep) - bootstrap_mae(ly, lp)
-    lo, hi = ci(diff)
-    outcome = "no clear difference" if lo <= 0 <= hi else ("best set better" if hi < 0 else "surface baseline better")
+    wins = [f for f in folds if scores(*best[f]["excl"])["mae"] < scores(*runs["surface"][f]["excl"])["mae"]]
     summary = "\n".join([
         f"- Original test set: the normal model misses by **{sn['mae']:.3f}**. With one source left out of training: {min(fold_test):.3f} to {max(fold_test):.3f}.",
-        f"- On the left-out source itself: **{es['mae']:.3f}** (surface baseline: {ls['mae']:.3f}, {outcome}).",
+        f"- On the left-out source itself, the curated features beat the surface baseline in {len(wins)} of {len(folds)} cases ({', '.join(f'`{f}`' for f in wins) or 'none'}).",
         "- `yle` and `HS` are graded well, since they share a label (5.5). `easy_text` and `yle-selkouutiset` are graded badly, since no other source has their label.", ""])
 
     L = ["# Source-transfer check: grading a source the model has never seen", "",
@@ -113,14 +104,13 @@ def main():
     for s in folds:
         t, e = scores(*best[s]["test"]), scores(*best[s]["excl"])
         L.append(f"| {s} | {best[s]['n_excl']} | {t['mae']:.3f} | {pct(t['exact'])} | {pct(t['near'])} | {e['mae']:.3f} | {pct(e['exact'])} | {pct(e['near'])} |")
-    L.append(f"| **all {len(folds)}, pooled** | {len(ey)} | | | | **{es['mae']:.3f}** | {pct(es['exact'])} | {pct(es['near'])} |")
 
     L += ["", "## The same for two reference feature sets", "",
-          "| feature set | test MAE (none excluded) | " + " | ".join(f"excl. MAE: {s}" for s in folds) + " | excl. MAE (pooled) |", "|---|---:|" + "---:|" * (len(folds) + 1)]
+          "| feature set | test MAE (none excluded) | " + " | ".join(f"excl. MAE: {s}" for s in folds) + " |", "|---|---:|" + "---:|" * len(folds)]
     for name in sets:
         r = runs[name]
         L.append(f"| **{LABELS[name]}** | {scores(*r['none']['test'])['mae']:.3f} | " + " | ".join(f"{scores(*r[s]['excl'])['mae']:.3f}" for s in folds)
-                 + f" | {excl_pooled(r)[2]['mae']:.3f} |")
+                 + " |")
 
     L += ["", "## How to read it", "",
           "- **Test vs excl.**: the test-set columns are the normal evaluation, so they stay comparable with `RESULTS.md`. The excl. columns show how the model does on a source it has never seen; "

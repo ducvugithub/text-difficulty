@@ -15,11 +15,12 @@ from scipy.stats import spearmanr
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
-from core.dataset import train_mask  # noqa: E402
+from core.dataset import load_split, native_mask, train_mask  # noqa: E402
 from core.reporting import md_table  # noqa: E402
 from curated_features.modeling.feature_sets import FEATURE_SETS, LABELS, aligned_tables  # noqa: E402
 from curated_features.modeling.make_results_report import meaning  # noqa: E402
 from curated_features.utils import registry  # noqa: E402
+from curated_features.utils.feature_store import signal_features  # noqa: E402
 
 BEST = "vocab_grammar_coverage_cognitive"
 REPEATS = 5
@@ -40,6 +41,36 @@ def shuffled_mae(model, X, y, cols, rng):
         Z[:, cols] = Z[rng.permutation(len(Z))][:, cols]
         out.append(np.abs(model.predict(Z) - y).mean())
     return np.array(out)
+
+
+def _rho(x, y):
+    return float("nan") if np.ptp(x) == 0 else float(spearmanr(x, y).statistic)
+
+
+def _fmt(v):
+    return "–" if np.isnan(v) else f"{v:+.2f}"
+
+
+def vocab_bin_section():
+    """Markdown lines: rank correlation of every vocab frequency feature with the label (bin 1 = most frequent words, higher bins = rarer)."""
+    feats = {s: signal_features(s, "vocab", "freq") for s in ("train", "test")}
+    df = {s: load_split(s) for s in feats}
+    native = native_mask(df["train"])
+    rows = []
+    for n in feats["train"].columns:
+        ytr, yte = df["train"]["label"].to_numpy(), df["test"]["label"].to_numpy()
+        x = feats["train"][n].to_numpy()
+        rows.append((n, _rho(x, ytr), _rho(x[native], ytr[native]), _rho(feats["test"][n].to_numpy(), yte)))
+    L = ["", "## Vocab frequency bins and the label: rank correlation", "",
+         "Separate from the permutation importance above: how each word-frequency feature moves with the label. **Bin 1** holds the most frequent words, **higher bins** the rarer ones; "
+         "each bin feature is the share of the text's words in that bin. +1 means a higher value always goes with a harder text, -1 the opposite, 0 no relationship. "
+         "The columns use different rows: all 8,293 train rows (72% translated from Russian), the 2,332 real-Finnish train rows, and the 865 real-Finnish test texts. "
+         "A correlation is not a cause: rarer words often come with longer words and longer texts."]
+    for title, prefixes in (("Lemma level (the word's own lemma is placed in a bin)", ("lemma_", "mean_log_lemma")), ("Stem level (every stem of a word is placed in a bin)", ("stem_", "mean_log_stem"))):
+        sub = sorted((r for r in rows if r[0].startswith(prefixes)), key=lambda r: (not r[0].startswith("mean_log"), "_bag_" not in r[0], r[0] if "_bag_" not in r[0] else int(r[0].split("_bag_")[1].split("_")[0])))
+        L += ["", f"### {title}", ""] + md_table(["feature", "meaning", "all train rows", "real-Finnish train rows", "test set"],
+                                               [[f"`{n}`", meaning(n), _fmt(a), _fmt(b), _fmt(c)] for n, a, b, c in sub])
+    return L
 
 
 def main():
@@ -99,6 +130,7 @@ def main():
         L += ["", f"## Permutation importance of the {kind} ({len(sub)} items, each scrambled on its own)", "", f"The {TOP} most important:", ""]
         L += fmt(list(enumerate(sub[:TOP], 1)))
         L += ["", f"<details><summary>all {len(sub)} {kind}, ranked</summary>", ""] + fmt(list(enumerate(sub, 1))) + ["", "</details>"]
+    L += vocab_bin_section()
     L += ["", "## Reproduce", "", "```", "python curated_features/modeling/run_feature_importance.py", "```", ""]
     REPORT.write_text("\n".join(L), encoding="utf-8")
     print("report ->", REPORT)

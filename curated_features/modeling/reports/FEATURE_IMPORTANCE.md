@@ -522,6 +522,45 @@ The 20 most important:
 
 </details>
 
+## Vocab frequency bins and the label: rank correlation
+
+Separate from the permutation importance above: how each word-frequency feature moves with the label. **Bin 1** holds the most frequent words, **higher bins** the rarer ones; each bin feature is the share of the text's words in that bin. +1 means a higher value always goes with a harder text, -1 the opposite, 0 no relationship. The columns use different rows: all 8,293 train rows (72% translated from Russian), the 2,332 real-Finnish train rows, and the 865 real-Finnish test texts. A correlation is not a cause: rarer words often come with longer words and longer texts.
+
+### Lemma level (the word's own lemma is placed in a bin)
+
+| feature | meaning | all train rows | real-Finnish train rows | test set |
+|---|---|---|---|---|
+| `mean_log_lemma_freq` | mean log10 count of the lemmas | -0.45 | -0.37 | -0.41 |
+| `lemma_bag_1_coverage` | share of lemmas in frequency bin 1 | -0.16 | -0.16 | -0.15 |
+| `lemma_bag_2_coverage` | share of lemmas in frequency bin 2 | -0.26 | -0.17 | -0.19 |
+| `lemma_bag_3_coverage` | share of lemmas in frequency bin 3 | -0.18 | -0.30 | -0.34 |
+| `lemma_bag_4_coverage` | share of lemmas in frequency bin 4 | +0.11 | +0.02 | +0.02 |
+| `lemma_bag_5_coverage` | share of lemmas in frequency bin 5 | +0.28 | +0.26 | +0.26 |
+| `lemma_bag_6_coverage` | share of lemmas in frequency bin 6 | +0.40 | +0.26 | +0.28 |
+| `lemma_bag_7_coverage` | share of lemmas in frequency bin 7 | +0.43 | +0.28 | +0.34 |
+| `lemma_bag_8_coverage` | share of lemmas in frequency bin 8 | +0.40 | +0.29 | +0.32 |
+| `lemma_bag_9_coverage` | share of lemmas in frequency bin 9 | +0.32 | +0.28 | +0.30 |
+| `lemma_OOV_coverage` | share of lemmas unknown (not recognised or not in the frequency list) | +0.08 | +0.28 | +0.28 |
+| `lemma_borrowed_coverage` | share of lemmas that look English (borrowed) | +0.23 | +0.20 | +0.18 |
+
+### Stem level (every stem of a word is placed in a bin)
+
+| feature | meaning | all train rows | real-Finnish train rows | test set |
+|---|---|---|---|---|
+| `mean_log_stem_freq` | mean log10 count of the stems | -0.31 | -0.17 | -0.20 |
+| `stem_bag_1_coverage` | share of stems in frequency bin 1 | -0.21 | -0.18 | -0.20 |
+| `stem_bag_2_coverage` | share of stems in frequency bin 2 | -0.15 | -0.14 | -0.19 |
+| `stem_bag_3_coverage` | share of stems in frequency bin 3 | -0.18 | -0.07 | -0.06 |
+| `stem_bag_4_coverage` | share of stems in frequency bin 4 | -0.08 | -0.20 | -0.24 |
+| `stem_bag_5_coverage` | share of stems in frequency bin 5 | +0.04 | +0.10 | +0.11 |
+| `stem_bag_6_coverage` | share of stems in frequency bin 6 | +0.10 | +0.01 | -0.01 |
+| `stem_bag_7_coverage` | share of stems in frequency bin 7 | +0.20 | +0.22 | +0.24 |
+| `stem_bag_8_coverage` | share of stems in frequency bin 8 | +0.13 | +0.11 | +0.16 |
+| `stem_bag_9_coverage` | share of stems in frequency bin 9 | +0.08 | -0.06 | -0.07 |
+| `stem_bag_10_coverage` | share of stems in frequency bin 10 | +0.17 | +0.03 | +0.05 |
+| `stem_OOV_coverage` | share of stems unknown (not recognised or not in the frequency list) | +0.05 | +0.23 | +0.22 |
+| `stem_borrowed_coverage` | share of stems that look English (borrowed) | +0.26 | +0.21 | +0.19 |
+
 ## Reproduce
 
 ```

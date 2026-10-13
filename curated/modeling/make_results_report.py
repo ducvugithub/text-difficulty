@@ -11,6 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
 from core.evaluate import CLASSES  # noqa: E402
+from core.reporting import steps, table  # noqa: E402
 from curated.modeling.feature_sets import EXPERIMENT_SETS, FEATURE_SETS, LABELS  # noqa: E402
 from curated.utils import registry  # noqa: E402
 from core.dataset import OLD_VOCAB  # noqa: E402
@@ -103,28 +104,8 @@ def feature_table(names):
     return ["| feature | meaning |", "|---|---|"] + [f"| `{n}` | {meaning(n)} |" for n in names]
 
 
-def table(text, heading):
-    """Rows (lists of cells) of the first markdown table after `heading`, without the header."""
-    lines = text.split("\n")
-    i = next(k for k, line in enumerate(lines) if line.strip() == heading)
-    rows, started = [], False
-    for line in lines[i + 1:]:
-        if line.startswith("|"):
-            started = True
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if not set(cells[0]) <= {"-", ":"}:
-                rows.append(cells)
-        elif started:
-            break
-    return rows[1:]
-
-
 def label(name):
     return LABELS.get(name, name)
-
-
-def steps(mae):
-    return f"{float(mae) / 0.5:.2f}"
 
 
 def bounds(ci):

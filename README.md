@@ -30,7 +30,11 @@ vocab, grammar (from Revita's concepts and topics) and cognitive (sentence lengt
 
 ## The BERT-driven way
 
-In progress: frozen BERT embeddings per layer, and a fine-tuned head.
+Uses the Finnish BERT model `TurkuNLP/bert-base-finnish-cased-v1` (`--model` chooses another). Texts longer than 512 word-pieces are cut into windows.
+
+- `bert/embeddings.py`: frozen embeddings, one vector per text and layer, cached in `outputs/embeddings/` (`python bert/embeddings.py`).
+- `bert/run_layers.py`: ridge regression on each layer's embedding; writes `bert/reports/BERT_LAYERS.md`.
+- `bert/run_finetune.py`: BERT with a regression head, fine-tuned; writes `bert/reports/BERT_FINETUNE.md` (needs a machine with free memory: about an hour per training set).
 
 ## Setup
 

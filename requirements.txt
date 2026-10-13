@@ -2,3 +2,5 @@ pandas
 scipy
 scikit-learn
 wordfreq
+torch
+transformers

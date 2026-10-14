@@ -20,7 +20,7 @@ Two approaches, graded on the same 865 real-Finnish test texts. Numbers are the 
 - What the best model relies on: sentence length by far, then word length and vocabulary variety, then some grammar concepts (more participles go with harder texts, more personal pronouns and indicative mood with easier ones). The syllabus topics are not used: they add nothing once the concepts are there ([concepts vs topics](curated_features/modeling/reports/GRAMMAR_CONCEPTS_VS_TOPICS.md)). Details in the feature-importance report below.
 
 ## Details
-- Curated features: [results](curated_features/modeling/reports/RESULTS.md), [source-transfer check](curated_features/modeling/reports/SOURCE_TRANSFER.md), [feature list](curated_features/docs/features.md), [feature importance](curated_features/modeling/reports/FEATURE_IMPORTANCE.md), [concepts vs topics](curated_features/modeling/reports/GRAMMAR_CONCEPTS_VS_TOPICS.md)
+- Curated features: [results](curated_features/modeling/reports/RESULTS.md), [source-transfer check](curated_features/modeling/reports/SOURCE_TRANSFER.md), [feature list](curated_features/docs/features.md), [feature importance](curated_features/modeling/reports/FEATURE_IMPORTANCE.md), [concepts vs topics](curated_features/modeling/reports/GRAMMAR_CONCEPTS_VS_TOPICS.md), [without surface features](curated_features/modeling/reports/SURFACE_ABLATION.md)
 - BERT: [frozen embeddings per layer](bert_based/reports/BERT_LAYERS.md) (the fine-tuning report, `bert_based/reports/BERT_FINETUNE.md`, appears after that run)
 
 ## Reproduce
@@ -30,6 +30,7 @@ python curated_features/modeling/run_experiment.py --train train_native --tag ma
 python curated_features/modeling/make_results_report.py                                # RESULTS.md
 python curated_features/modeling/run_source_transfer.py                                # SOURCE_TRANSFER.md
 python curated_features/modeling/run_feature_importance.py                             # FEATURE_IMPORTANCE.md
+python curated_features/modeling/run_surface_ablation.py                             # SURFACE_ABLATION.md
 python bert_based/embeddings.py                                                        # BERT embeddings (cached)
 python bert_based/run_layers.py                                                        # BERT_LAYERS.md
 python bert_based/run_finetune.py --train train_native --lora                          # fine-tuned BERT with LoRA; also train_all (needs free memory)

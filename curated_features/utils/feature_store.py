@@ -48,7 +48,7 @@ def _original_columns():
 def feature_table(split, spec, refresh=False):
     """(X, df): the feature matrix of a feature set for a split, and the split's metadata frame.
 
-    `spec` is an entry of curated_features/modeling/feature_sets.FEATURE_SETS: {"signals": [(category, signal[, settings])], "original": "all" | "no_vocab", "columns": [data columns], "surface": bool}.
+    `spec` is an entry of curated_features/modeling/feature_sets.FEATURE_SETS: {"signals": [(category, signal[, settings])], "original": "all" | "no_vocab", "columns": [data columns], "exclude": [feature names to drop], "surface": bool}.
     """
     df = load_split(split)
     parts = []
@@ -61,4 +61,7 @@ def feature_table(split, spec, refresh=False):
         parts.append(surface_features(df))
     for category, signal, *rest in spec.get("signals", []):
         parts.append(signal_features(split, category, signal, rest[0] if rest else None, refresh))
-    return pd.concat(parts, axis=1), df
+    X = pd.concat(parts, axis=1)
+    if spec.get("exclude"):  # drop single features, e.g. to test what a set does without them
+        X = X.drop(columns=[c for c in spec["exclude"] if c in X.columns])
+    return X, df

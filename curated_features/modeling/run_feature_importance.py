@@ -28,7 +28,7 @@ TOP = 20
 REPORT = Path(__file__).resolve().parent / "reports" / "FEATURE_IMPORTANCE.md"
 GROUPS = {  # a group is one piece of the set: its registry signals
     "vocab: word frequency bins": [("vocab", "freq")], "vocab: word form": [("vocab", "lexical")],
-    "grammar concepts (one feature per concept)": [("grammar", "coverage_concepts")], "syllabus topics (one feature per topic)": [("grammar", "coverage_topics")],
+    "grammar concepts (one feature per concept)": [("grammar", "coverage_concepts")],
     "cognitive: sentence length": [("cognitive", "sentence_length")], "parse features (old)": [("cognitive", "parse_old")],
 }
 
@@ -122,7 +122,7 @@ def main():
     L += ["", f"## Permutation importance of the {TOP} most important single features", ""]
     rows = [[f"`{n}`", group_of.get(n, ""), meaning(n), f"{m:.4f}", f"±{s:.4f}", ("harder" if r > 0.05 else "easier" if r < -0.05 else "unclear") + f" ({r:+.2f})"] for n, m, s, r in single[:TOP]]
     L += md_table(["feature", "group", "meaning", "importance", "spread", "direction (rank correlation)"], rows)
-    for kind, prefix, n_all in (("grammar concepts", "grammar_concept_cov_", 268), ("syllabus topics", "grammar_topic_cov_", 133)):
+    for kind, prefix, n_all in (("grammar concepts", "grammar_concept_cov_", 268),):
         sub = [r for r in single if r[0].startswith(prefix)]
         fmt = lambda rows: md_table(["rank", "item", "importance (average miss grows by)", "spread", "direction (rank correlation)"],  # noqa: E731
                                     [[i, f"`{n[len(prefix):]}`", f"{m:.4f}", f"±{sd:.4f}", ("harder" if r > 0.05 else "easier" if r < -0.05 else "unclear") + f" ({r:+.2f})"]

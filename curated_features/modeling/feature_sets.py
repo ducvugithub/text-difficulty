@@ -8,9 +8,10 @@ from core.dataset import OLD_VOCAB
 from curated_features.utils.feature_store import feature_table
 
 VOCAB = [("vocab", "freq"), ("vocab", "lexical")]
-MANUAL = [("grammar", "manual_concepts_levels"), ("grammar", "manual_topics_levels")]
-RARITY = [("grammar", "rarity_concepts"), ("grammar", "rarity_topics")]
-COVERAGE = [("grammar", "coverage_concepts"), ("grammar", "coverage_topics")]
+# grammar features are the concept features only: the syllabus-topic features add nothing once the concepts are there (reports/GRAMMAR_CONCEPTS_VS_TOPICS.md)
+MANUAL = [("grammar", "manual_concepts_levels")]
+RARITY = [("grammar", "rarity_concepts")]
+COVERAGE = [("grammar", "coverage_concepts")]
 COGNITIVE = [("cognitive", "parse_old"), ("cognitive", "sentence_length")]
 
 FEATURE_SETS = {
@@ -20,9 +21,9 @@ FEATURE_SETS = {
     "original_all": {"description": "the 402 original columns: syntax averages, old vocab bins, concept and topic columns", "original": "all"},
     # one category each
     "vocab": {"description": "vocab: lemma and stem frequency bins, English-looking share, lexical features", "signals": VOCAB},
-    "grammar_manual": {"description": "grammar: share of concept and topic occurrences per CEFR level (Revita's manual levels)", "signals": MANUAL},
-    "grammar_rarity": {"description": "grammar: how rare the concepts and topics are in Revita's Finnish stories (bin shares, mean IDF)", "signals": RARITY},
-    "grammar_coverage": {"description": "grammar: the share of every concept and every topic in the text (one feature each)", "signals": COVERAGE},
+    "grammar_manual": {"description": "grammar: share of concept occurrences per CEFR level (Revita's manual levels)", "signals": MANUAL},
+    "grammar_rarity": {"description": "grammar: how rare the concepts are in Revita's Finnish stories (bin shares, mean IDF)", "signals": RARITY},
+    "grammar_coverage": {"description": "grammar: the share of every concept in the text (one feature each)", "signals": COVERAGE},
     "grammar_all": {"description": "grammar: manual levels, rarity and coverage together", "signals": MANUAL + RARITY + COVERAGE},
     "cognitive": {"description": "cognitive: the old parse features (tree depth, distinct POS, sentence length) plus sentence count / mean / max / std length", "signals": COGNITIVE},
     "cognitive_dependency": {"description": "cognitive: tree depth, dependency distance, clauses from our own parse (needs the parser)", "signals": [("cognitive", "dependency")]},

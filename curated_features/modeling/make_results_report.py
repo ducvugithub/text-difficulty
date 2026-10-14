@@ -38,9 +38,9 @@ MATRIX = [
 PIECES = [  # (name, what it gives, signal or None, number of features for the pieces that are not signals)
     ("vocab: frequency bins", "How common the words are, for lemmas and for stems: share of words in each frequency bin, share unknown, share English-looking, mean log frequency", [("vocab", "freq")], None),
     ("vocab: word form", "How words are built: word length, compounds, derivations (-llinen, -ton, -minen, -sti), number of different lemmas, lexical diversity", [("vocab", "lexical")], None),
-    ("grammar: manual levels", "Share of the text's grammar concepts (and, separately, syllabus topics) at each CEFR level A1 to B2, from Revita's manual levels", [("grammar", "manual_concepts_levels"), ("grammar", "manual_topics_levels")], 12),
-    ("grammar: rarity", "How rare the text's grammar concepts and topics are in Revita's Finnish stories: share in each rarity bin, share never seen, mean IDF", [("grammar", "rarity_concepts"), ("grammar", "rarity_topics")], 17),
-    ("grammar: coverage", "One feature per grammar concept (268) and per syllabus topic (133): its share of the text", [("grammar", "coverage_concepts"), ("grammar", "coverage_topics")], 401),
+    ("grammar: manual levels", "Share of the text's grammar concepts at each CEFR level A1 to B2, from Revita's manual levels", [("grammar", "manual_concepts_levels")], 8),
+    ("grammar: rarity", "How rare the text's grammar concepts are in Revita's Finnish stories: share in each rarity bin, share never seen, mean IDF", [("grammar", "rarity_concepts")], 9),
+    ("grammar: coverage", "One feature per grammar concept (268): its share of the text", [("grammar", "coverage_concepts")], 268),
     ("cognitive: sentence length", "Number of sentences, and the mean, longest and spread of sentence length in words", [("cognitive", "sentence_length")], None),
     ("parse features (old)", "Tree depth, distinct parts of speech and tokens per sentence from the dependency parse; computed by an older Revita run and come with the data", [("cognitive", "parse_old")], None),
     ("original: vocab bins (11)", "Out-of-vocabulary share and the share of words in each of 10 frequency bags, old definition (come with the data)", None, 11),
@@ -71,7 +71,7 @@ LEXICAL = {
 
 NOTES = {"parse features (old)": "These are the three syntax columns that come with the data (`average_tree_depth`, `average_num_pos`, `average_sentence_length`); the cognitive sets use them together with our own sentence-length features.",
          "vocab: frequency bins": "Bin 1 holds the most frequent words, higher bins the rarer ones.",
-         "grammar: rarity": "Bin 1 holds the concepts and topics that are most common in Revita's Finnish stories, higher bins the rarer ones."}
+         "grammar: rarity": "Bin 1 holds the concepts that are most common in Revita's Finnish stories, higher bins the rarer ones."}
 
 
 def meaning(name):
@@ -173,7 +173,7 @@ def main():
          f"- Best: **{label(best[0])}** ({best[1]} features), average miss {best[2]}, against {orig[2]} for the 402 original columns, {length[2]} for the surface baseline "
          f"(intervals {'do not overlap' if disjoint(best[3], length[3]) else 'overlap'}) and {dummy[2]} for a constant guess."
          + (f" {label(lowest[0])} has the lowest miss ({lowest[2]}) but is the same within noise." if lowest[0] != best[0] else ""),
-         f"- Grammar works best as the share of each concept and topic ({cov[2]}), not as manual levels ({key['grammar_manual'][2]}) or rarity ({key['grammar_rarity'][2]}).",
+         f"- Grammar works best as the share of each concept ({cov[2]}), not as manual levels ({key['grammar_manual'][2]}) or rarity ({key['grammar_rarity'][2]}).",
          f"- The new vocabulary features ({key['vocab'][2]}) beat the old vocabulary bins ({key['original_vocab_bins'][2]}).",
          "- Caution: the surface baseline (word and sentence length) is already a strong clue, so part of every score may come from such simple measures or from the source of the texts, not from deeper difficulty.", "",
          "## How to read the numbers", "",
@@ -190,7 +190,7 @@ def main():
         L.append(f"| **{label(name)}** ({n_feat[name]}) | " + " | ".join(TICK if test(FEATURE_SETS[name]) else "" for _, test in MATRIX) + " |")
     L += ["", "Where the data behind each piece comes from:", "", "| piece | computed from | new or old |", "|---|---|---|",
           "| vocab: frequency bins, word form | the text itself, with code in this repository (Voikko and our cleaned frequency list) | new |",
-          "| grammar: manual levels, rarity, coverage | the concept and topic columns that come with the data (an older Revita run); the features built from them are new | new features, old data |",
+          "| grammar: manual levels, rarity, coverage | the concept columns that come with the data (an older Revita run); the features built from them are new | new features, old data |",
           "| cognitive: sentence length | the text itself, with a plain sentence split | new |",
           "| parse features (old) | the three syntax columns that come with the data (an older Revita run) | old |",
           "| surface | the text itself | new |",
@@ -210,7 +210,7 @@ def main():
     L += ["", "### 2.2 Ridge regression", "", "#### a. Trained on real-Finnish rows (2,332 texts)", ""] + results_table(rd["train_native"]) + [
           "", "#### b. Trained on all rows (8,293 texts)", ""] + results_table(rd["train_all"])
     L += ["", "## Appendix: the features", "",
-          "Every feature of the pieces above. Concept and topic coverage have one feature per item, so those are listed by item; "
+          "Every feature of the pieces above. Concept coverage has one feature per concept, so it is listed by item; "
           "`curated_features/docs/features.md` has the longer definitions of the vocabulary features."]
     for name, _, signal, n in PIECES:
         if signal is None:
@@ -220,7 +220,7 @@ def main():
         if name in NOTES:
             L += [NOTES[name], ""]
         if name == "grammar: coverage":
-            for kind, subset in (("concept", [x for x in names if "_concept_cov_" in x]), ("topic", [x for x in names if "_topic_cov_" in x])):
+            for kind, subset in (("concept", [x for x in names if "_concept_cov_" in x]),):
                 items = [x.split("_cov_", 1)[1] for x in subset]
                 L += [f"One feature per {kind}, `grammar_{kind}_cov_<{kind}>`: the share of the text's {kind} occurrences that are that {kind}.", "",
                       f"<details><summary>the {len(items)} {kind}s</summary>", "", ", ".join(f"`{i}`" for i in items), "", "</details>", ""]

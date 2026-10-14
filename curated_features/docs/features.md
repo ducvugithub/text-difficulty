@@ -40,6 +40,8 @@ Grammar items are Revita's concepts (268 counted, e.g. `Case-Illative`, `Noun-Pa
 
 Covered by `coverage_concepts` and no longer separate to-dos: case ratios, mood and passive ratios, non-finite verb forms, negation (the `Case-*`, `Mood-*`, `Voice-*`, `Infinitive-*`, `Participle-*`, `Polarity-*` concepts). Still todo: morphological feature counts per token (`avg_morph_feats_per_token`, `n_unique_morph_feat_types`).
 
+**The experiments use the concept signals only.** The topic signals (`manual_topics_levels`, `rarity_topics`, `coverage_topics`) stay registered but are not used in any feature set: the topic features add nothing once the concepts are there (see `modeling/reports/GRAMMAR_CONCEPTS_VS_TOPICS.md`).
+
 Listening exercises (`Topic: Listen ...`, `Listening-*`) are Revita exercise types, not grammar, and are never counted.
 
 ## Cognitive (`curated_features/categories/cognitive`)

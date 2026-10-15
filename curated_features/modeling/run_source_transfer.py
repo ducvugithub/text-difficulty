@@ -20,6 +20,7 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
+from core.reporting import mae_fmt, PCT_NOTE  # noqa: E402
 from core.dataset import native_mask  # noqa: E402
 from core.evaluate import bootstrap_mae, ci, round_to_step  # noqa: E402
 from curated_features.modeling.feature_sets import FEATURE_SETS, LABELS  # noqa: E402
@@ -83,7 +84,7 @@ def main():
     fold_test = [scores(*best[s]["test"])["mae"] for s in folds]
     wins = [f for f in folds if scores(*best[f]["excl"])["mae"] < scores(*runs["surface"][f]["excl"])["mae"]]
     summary = "\n".join([
-        f"- Original test set: the normal model misses by **{sn['mae']:.3f}**. With one source left out of training: {min(fold_test):.3f} to {max(fold_test):.3f}.",
+        f"- Original test set: the normal model misses by **{mae_fmt(sn['mae'])}**. With one source left out of training: {mae_fmt(min(fold_test))} to {mae_fmt(max(fold_test))}.",
         f"- On the left-out source itself, the curated features beat the surface baseline in {len(wins)} of {len(folds)} cases ({', '.join(f'`{f}`' for f in wins) or 'none'}).",
         "- `yle` and `HS` are graded well, since they share a label (5.5). `easy_text` and `yle-selkouutiset` are graded badly, since no other source has their label.", ""])
 
@@ -96,20 +97,20 @@ def main():
          "- **Test set**: the original 865 test texts, as in `RESULTS.md`.",
          "- **Excl. set**: all texts of the left-out source. This is the detail.",
          "- `FI` stays in training and in the test set; it is never left out.",
-         "- **MAE**: average miss, smaller is better (one label step is 0.5). **Exactly acc**: share of predictions exactly right. **Within 0.5 acc**: share off by at most 0.5.", "",
+         "- **MAE**: average miss, smaller is better (one label step is 0.5). " + PCT_NOTE + " **Exactly acc**: share of predictions exactly right. **Within 0.5 acc**: share off by at most 0.5.", "",
          "## Result for the best feature set", "",
          "| excl. source | excl. count | test MAE | test exactly acc | test within 0.5 acc | excl. MAE | excl. exactly acc | excl. within 0.5 acc |",
          "|---|---:|---:|---:|---:|---:|---:|---:|",
-         f"| none (normal model) | 0 | {sn['mae']:.3f} | {pct(sn['exact'])} | {pct(sn['near'])} | | | |"]
+         f"| none (normal model) | 0 | {mae_fmt(sn['mae'])} | {pct(sn['exact'])} | {pct(sn['near'])} | | | |"]
     for s in folds:
         t, e = scores(*best[s]["test"]), scores(*best[s]["excl"])
-        L.append(f"| {s} | {best[s]['n_excl']} | {t['mae']:.3f} | {pct(t['exact'])} | {pct(t['near'])} | {e['mae']:.3f} | {pct(e['exact'])} | {pct(e['near'])} |")
+        L.append(f"| {s} | {best[s]['n_excl']} | {mae_fmt(t['mae'])} | {pct(t['exact'])} | {pct(t['near'])} | {mae_fmt(e['mae'])} | {pct(e['exact'])} | {pct(e['near'])} |")
 
     L += ["", "## The same for two reference feature sets", "",
           "| feature set | test MAE (none excluded) | " + " | ".join(f"excl. MAE: {s}" for s in folds) + " |", "|---|---:|" + "---:|" * len(folds)]
     for name in sets:
         r = runs[name]
-        L.append(f"| **{LABELS[name]}** | {scores(*r['none']['test'])['mae']:.3f} | " + " | ".join(f"{scores(*r[s]['excl'])['mae']:.3f}" for s in folds)
+        L.append(f"| **{LABELS[name]}** | {mae_fmt(scores(*r['none']['test'])['mae'])} | " + " | ".join(f"{mae_fmt(scores(*r[s]['excl'])['mae'])}" for s in folds)
                  + " |")
 
     L += ["", "## How to read it", "",

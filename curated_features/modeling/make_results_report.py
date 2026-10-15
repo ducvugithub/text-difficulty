@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
 from core.evaluate import CLASSES  # noqa: E402
-from core.reporting import steps, table  # noqa: E402
+from core.reporting import mae_fmt, steps, table, PCT_NOTE  # noqa: E402
 from curated_features.modeling.feature_sets import EXPERIMENT_SETS, FEATURE_SETS, LABELS  # noqa: E402
 from curated_features.utils import registry  # noqa: E402
 from core.dataset import OLD_VOCAB  # noqa: E402
@@ -121,8 +121,8 @@ def disjoint(a, b):
 def results_table(rows):
     out = ["| feature set | features | average miss (MAE) [95% interval] | in label steps | exactly right | within one step |", "|---|---:|---|---:|---:|---:|"]
     for name, cols, mae, ci, acc, near in rows:
-        out.append(f"| **{label(name)}** | {cols} | {mae} {ci} | {steps(mae)} | {acc} | {near} |" if name != "dummy"
-                   else f"| *constant guess ({cols})* | 0 | {mae} | {steps(mae)} | {acc} | {near} |")
+        out.append(f"| **{label(name)}** | {cols} | {mae_fmt(mae)} {ci} | {steps(mae)} | {acc} | {near} |" if name != "dummy"
+                   else f"| *constant guess ({cols})* | 0 | {mae_fmt(mae)} | {steps(mae)} | {acc} | {near} |")
     return out
 
 
@@ -170,14 +170,14 @@ def main():
          "`(new)` = features built in this repository, `(old)` = the columns that come with the data.", "",
          "## Summary", "",
          "We predict a Finnish text's difficulty (label 1 to 6) from groups of features and compare the average error.", "",
-         f"- Best: **{label(best[0])}** ({best[1]} features), average miss {best[2]}, against {orig[2]} for the 402 original columns, {length[2]} for the surface baseline "
-         f"(intervals {'do not overlap' if disjoint(best[3], length[3]) else 'overlap'}) and {dummy[2]} for a constant guess."
-         + (f" {label(lowest[0])} has the lowest miss ({lowest[2]}) but is the same within noise." if lowest[0] != best[0] else ""),
-         f"- Grammar works best as the share of each concept ({cov[2]}), not as manual levels ({key['grammar_manual'][2]}) or rarity ({key['grammar_rarity'][2]}).",
-         f"- The new vocabulary features ({key['vocab'][2]}) beat the old vocabulary bins ({key['original_vocab_bins'][2]}).",
+         f"- Best: **{label(best[0])}** ({best[1]} features), average miss {mae_fmt(best[2])}, against {mae_fmt(orig[2])} for the 402 original columns, {mae_fmt(length[2])} for the surface baseline "
+         f"(intervals {'do not overlap' if disjoint(best[3], length[3]) else 'overlap'}) and {mae_fmt(dummy[2])} for a constant guess."
+         + (f" {label(lowest[0])} has the lowest miss ({mae_fmt(lowest[2])}) but is the same within noise." if lowest[0] != best[0] else ""),
+         f"- Grammar works best as the share of each concept ({mae_fmt(cov[2])}), not as manual levels ({mae_fmt(key['grammar_manual'][2])}) or rarity ({mae_fmt(key['grammar_rarity'][2])}).",
+         f"- The new vocabulary features ({mae_fmt(key['vocab'][2])}) beat the old vocabulary bins ({mae_fmt(key['original_vocab_bins'][2])}).",
          "- Caution: the surface baseline (word and sentence length) is already a strong clue, so part of every score may come from such simple measures or from the source of the texts, not from deeper difficulty.", "",
          "## How to read the numbers", "",
-         "- **Average miss (MAE)**: average distance between predicted and true label; smaller is better. One label step is 0.5.",
+         "- **Average miss (MAE)**: average distance between predicted and true label; smaller is better. One label step is 0.5. " + PCT_NOTE + "",
          "- **Exactly right / within one step**: the prediction, rounded to the nearest half step, equals the label / is off by at most 0.5.",
          "- **95% interval**: from resampling the 865 test texts; overlapping intervals may be noise.",
          "- **Constant guess**: always the same label. The floor.", "",

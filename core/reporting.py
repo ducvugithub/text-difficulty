@@ -27,6 +27,15 @@ def pct(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
+LABEL_RANGE = 5  # labels run from 1 to 6
+PCT_NOTE = f"A percent in brackets after an average miss is that miss divided by the label range ({LABEL_RANGE} points, labels 1 to 6)."
+
+
+def mae_fmt(mae) -> str:
+    """An average miss in label points with the same miss as a share of the label range, e.g. `0.257 (5.1%)`."""
+    return f"{float(mae):.3f} ({100 * float(mae) / LABEL_RANGE:.1f}%)"
+
+
 def md_table(header, rows):
     """A markdown table from a header list and a list of row lists."""
     return ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)] + ["| " + " | ".join(str(c) for c in r) + " |" for r in rows]

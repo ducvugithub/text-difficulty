@@ -7,7 +7,8 @@ text-difficulty/
 ├── core/                  shared by both ways
 │   ├── dataset.py         load the train / valid / test splits, column groups, text surface features
 │   ├── evaluate.py        MAE, accuracy, within-one-step, balanced accuracy, bootstrap intervals, confusion matrices
-│   └── reporting.py       markdown report helpers
+│   ├── reporting.py       markdown report helpers
+│   └── run_feature_group_plots.py   one boxplot + scatter figure per feature group
 ├── curated_features/      way 1: hand-curated vocab, grammar and cognitive features
 │   ├── categories/        vocab, grammar, cognitive: one folder per signal
 │   ├── utils/             base classes, registry, feature builder and cache
@@ -17,6 +18,7 @@ text-difficulty/
 ├── bert_based/            way 2: BERT embeddings and fine-tuning
 │   ├── embeddings.py  run_layers.py  run_finetune.py
 │   └── reports/           BERT_LAYERS.md, BERT_FINETUNE.md
+├── reports/               cross-approach reports: feature_group_plots/ (FEATURE_GROUPS.md and its figures)
 ├── data/                  raw inputs (train/valid/test CSVs, frequency list); local only, git-ignored
 └── outputs/               generated feature tables, embeddings and caches; git-ignored
 ```

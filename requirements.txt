@@ -5,3 +5,4 @@ wordfreq
 torch
 transformers
 peft
+matplotlib

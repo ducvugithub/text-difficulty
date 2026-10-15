@@ -22,6 +22,7 @@ from scipy.stats import spearmanr
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
+from core.reporting import mae_fmt  # noqa: E402
 from core.dataset import native_mask  # noqa: E402
 from core.evaluate import bootstrap_mae, ci, metrics  # noqa: E402
 from curated_features.modeling.feature_sets import DESCRIPTIONS, EXPERIMENT_SETS, aligned_tables  # noqa: E402
@@ -59,11 +60,11 @@ def main():
     src_pred = gbm().fit(X_src_tr[native], y_tr[native]).predict(X_src_te)
     m = metrics(y_te, src_pred)
     lines += ["", "## 2. A model that sees only the source (diagnostic, never a feature set)", "",
-              f"Trained on the real-Finnish train rows, tested on all test texts: MAE {m['mae']:.3f} [{ci(bootstrap_mae(y_te, src_pred))[0]:.3f}, "
+              f"Trained on the real-Finnish train rows, tested on all test texts: MAE {mae_fmt(m['mae'])} [{ci(bootstrap_mae(y_te, src_pred))[0]:.3f}, "
               f"{ci(bootstrap_mae(y_te, src_pred))[1]:.3f}], accuracy {pct(m['accuracy'])}, within one step {pct(m['accuracy_1step'])}. "
               "This is what recognising the source alone achieves; a feature set near it is mostly recognising the source.", ""]
     mf = metrics(y_te[fi_te], src_pred[fi_te])
-    lines.append(f"On the FI texts alone the source-only model has MAE {mf['mae']:.3f}: it cannot separate FI labels.")
+    lines.append(f"On the FI texts alone the source-only model has MAE {mae_fmt(mf['mae'])}: it cannot separate FI labels.")
 
     preds_all = {}
     for name in SETS:
@@ -71,10 +72,10 @@ def main():
         preds_all[name] = gbm().fit(X_tr[native], y_tr[native]).predict(X_te)
     lines += ["", "## 3. Test MAE per source (trained on the real-Finnish train rows)", "",
               "| feature set | all | " + " | ".join(f"{s} (n={int((d_te['source'] == s).sum())})" for s in sources) + " |", "|---|---:|" + "---:|" * len(sources)]
-    lines.append("| source only | " + f"{np.abs(src_pred - y_te).mean():.3f} | " + " | ".join(f"{np.abs(src_pred[(d_te['source'] == s).to_numpy()] - y_te[(d_te['source'] == s).to_numpy()]).mean():.3f}" for s in sources) + " |")
+    lines.append("| source only | " + f"{mae_fmt(np.abs(src_pred - y_te).mean())} | " + " | ".join(f"{mae_fmt(np.abs(src_pred[(d_te['source'] == s).to_numpy()] - y_te[(d_te['source'] == s).to_numpy()]).mean())}" for s in sources) + " |")
     for name in SETS:
         p = preds_all[name]
-        lines.append(f"| {name} | {np.abs(p - y_te).mean():.3f} | " + " | ".join(f"{np.abs(p[(d_te['source'] == s).to_numpy()] - y_te[(d_te['source'] == s).to_numpy()]).mean():.3f}" for s in sources) + " |")
+        lines.append(f"| {name} | {mae_fmt(np.abs(p - y_te).mean())} | " + " | ".join(f"{mae_fmt(np.abs(p[(d_te['source'] == s).to_numpy()] - y_te[(d_te['source'] == s).to_numpy()]).mean())}" for s in sources) + " |")
 
     lines += ["", "## 4. FI only: the source cannot explain the label", "",
               f"FI test texts: {int(fi_te.sum())}, labels {[float(v) for v in sorted(set(y_te[fi_te]))]}. The dummy always predicts the FI train median "
@@ -83,11 +84,11 @@ def main():
         lines += [f"### {title}", "", "| feature set | MAE | MAE 95% CI | accuracy | within one step | rho |", "|---|---:|---|---:|---:|---:|"]
         dummy = np.full(fi_te.sum(), np.median(y_tr[fi_tr]))
         md = metrics(y_te[fi_te], dummy)
-        lines.append(f"| dummy (median) | {md['mae']:.3f} | [{ci(bootstrap_mae(y_te[fi_te], dummy))[0]:.3f}, {ci(bootstrap_mae(y_te[fi_te], dummy))[1]:.3f}] | {pct(md['accuracy'])} | {pct(md['accuracy_1step'])} | |")
+        lines.append(f"| dummy (median) | {mae_fmt(md['mae'])} | [{ci(bootstrap_mae(y_te[fi_te], dummy))[0]:.3f}, {ci(bootstrap_mae(y_te[fi_te], dummy))[1]:.3f}] | {pct(md['accuracy'])} | {pct(md['accuracy_1step'])} | |")
         for name in SETS:
             p = gbm().fit(tables[name]["train"][0].to_numpy()[mask], y_tr[mask]).predict(tables[name]["test"][0].to_numpy()[fi_te])
             mm = metrics(y_te[fi_te], p); lo, hi = ci(bootstrap_mae(y_te[fi_te], p))
-            lines.append(f"| {name} | {mm['mae']:.3f} | [{lo:.3f}, {hi:.3f}] | {pct(mm['accuracy'])} | {pct(mm['accuracy_1step'])} | {spearmanr(p, y_te[fi_te]).statistic:+.2f} |")
+            lines.append(f"| {name} | {mae_fmt(mm['mae'])} | [{lo:.3f}, {hi:.3f}] | {pct(mm['accuracy'])} | {pct(mm['accuracy_1step'])} | {spearmanr(p, y_te[fi_te]).statistic:+.2f} |")
         lines.append("")
     lines += ["## Feature sets", ""] + [f"- `{n}`: {DESCRIPTIONS[n]}" for n in SETS]
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -20,7 +20,7 @@ from bert_based import embeddings  # noqa: E402
 from core import predictions  # noqa: E402
 from core.dataset import TRAIN_SETS, load_split, train_mask  # noqa: E402
 from core.evaluate import bootstrap_mae, ci, metrics  # noqa: E402
-from core.reporting import confusion_md, pct, steps, table  # noqa: E402
+from core.reporting import confusion_md, pct, steps, table, mae_fmt, PCT_NOTE  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "bert_based" / "reports" / "BERT_LAYERS.md"
@@ -68,7 +68,7 @@ def main():
             results[(train, layer)] = {**metrics(y_test, pred), "ci": ci(bootstrap_mae(y_test, pred)), "alpha": float(model[-1].alpha_)}
             preds[(train, layer)] = pred
             predictions.save("bert", "ridge", "mean_layers_1_12" if layer == "mean" else f"layer_{layer:02d}", train, y_test, pred)
-            print(f"{train} {name_of(layer):22s} MAE {results[(train, layer)]['mae']:.3f}", flush=True)
+            print(f"{train} {name_of(layer):22s} MAE {mae_fmt(results[(train, layer)]['mae'])}", flush=True)
         dummies = {"most common label": train_df["label"][mask].mode().iloc[0], "median label": train_df["label"][mask].median()}
         results[(train, "dummy")] = {k: float(np.abs(v - y_test).mean()) for k, v in dummies.items()}
 
@@ -77,7 +77,7 @@ def main():
 
     def row(train, layer):
         r = results[(train, layer)]
-        return [f"**{name_of(layer)}**" if layer == best(train) else name_of(layer), f"{r['mae']:.3f} [{r['ci'][0]:.3f}, {r['ci'][1]:.3f}]", steps(r["mae"]),
+        return [f"**{name_of(layer)}**" if layer == best(train) else name_of(layer), f"{mae_fmt(r['mae'])} [{r['ci'][0]:.3f}, {r['ci'][1]:.3f}]", steps(r["mae"]),
                 pct(r["accuracy"]), pct(r["accuracy_1step"])]
 
     header = "| layer | average miss (MAE) [95% interval] | in label steps | exactly right | within one step |\n|---|---|---:|---:|---:|"
@@ -87,12 +87,12 @@ def main():
         b = best(train)
         gb = next((r[3] for lbl, r in curated_context(train) if lbl.startswith("best curated")), None)
         rd = next((r[3] for lbl, r in curated_context(train, "ridge regression") if lbl.startswith("best curated")), None)
-        best_cur = f" The best curated feature set misses by {gb} with gradient boosting and by {rd} with ridge regression (the model used here)." if gb and rd else ""
-        L.append(f"- Trained on {desc}: the best layer is **{name_of(b)}** with an average miss of **{results[(train, b)]['mae']:.3f}** "
-                 f"(layer 0: {results[(train, 0)]['mae']:.3f}, layer 12: {results[(train, 12)]['mae']:.3f}; a constant guess: "
-                 f"{results[(train, 'dummy')]['most common label']:.3f}).{best_cur}")
+        best_cur = f" The best curated feature set misses by {mae_fmt(gb)} with gradient boosting and by {mae_fmt(rd)} with ridge regression (the model used here)." if gb and rd else ""
+        L.append(f"- Trained on {desc}: the best layer is **{name_of(b)}** with an average miss of **{mae_fmt(results[(train, b)]['mae'])}** "
+                 f"(layer 0: {mae_fmt(results[(train, 0)]['mae'])}, layer 12: {mae_fmt(results[(train, 12)]['mae'])}; a constant guess: "
+                 f"{mae_fmt(results[(train, 'dummy')]['most common label'])}).{best_cur}")
     L += ["", "## How to read the numbers", "",
-          "- **Average miss (MAE)**: average distance between predicted and true label; smaller is better. One label step is 0.5.",
+          "- **Average miss (MAE)**: average distance between predicted and true label; smaller is better. One label step is 0.5. " + PCT_NOTE + "",
           "- **Exactly right / within one step**: the prediction, rounded to the nearest half step, equals the label / is off by at most 0.5.",
           "- **95% interval**: from resampling the 865 test texts; overlapping intervals may be noise.",
           "- Layer 0 is the word-piece embedding layer, before any transformer layer; layers 1 to 12 are the transformer layers.", "",
@@ -107,9 +107,9 @@ def main():
         L += [f"### Trained on {desc}", "", header]
         L += ["| " + " | ".join(row(train, layer)) + " |" for layer in layers]
         for label, r in curated_context(train) + curated_context(train, "ridge regression"):
-            L.append(f"| *{label}* | {r[3]} {r[4]} | {steps(r[3])} | {r[5]} | {r[6]} |")
+            L.append(f"| *{label}* | {mae_fmt(r[3])} {r[4]} | {steps(r[3])} | {r[5]} | {r[6]} |")
         d = results[(train, "dummy")]
-        L += [f"| *constant guess ({k})* | {v:.3f} | {steps(v)} | | |" for k, v in d.items()] + [""]
+        L += [f"| *constant guess ({k})* | {mae_fmt(v)} | {steps(v)} | | |" for k, v in d.items()] + [""]
     b = best("train_native")
     L += [f"### Confusion matrix of the best layer ({name_of(b)}, trained on real-Finnish rows)", "",
           "Each row is the true label, each column the predicted label (rounded to the nearest half step). A row adds up to 100%; the **bold** cell is the share predicted exactly right.", ""]

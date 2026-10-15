@@ -91,7 +91,7 @@ def run(args):
 
     torch.manual_seed(0)
     rng = np.random.default_rng(0)
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     variant = "lora" if args.lora else "full"
     lr = args.lr or (2e-4 if args.lora else 2e-5)  # adapters need a larger learning rate than full fine-tuning

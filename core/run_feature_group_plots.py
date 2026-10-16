@@ -155,7 +155,7 @@ def write_report(train, results, layer):
     L += md_table(["feature group", "features", "MAE", "MSE", "RMSE", "corr"],
                   [[f"[{t}]({img})", n, cell(s["MAE"]), cell(s["MSE"]), cell(s["RMSE"]), f"{s['corr']:.3f}"] for t, n, img, s in ranked]) + [""]
     L += ["## Figures", ""]
-    for t, n, img, s in results:
+    for t, n, img, s in ranked:
         L += [f"### {t}", "", f"![{t}]({img})", ""]
     L += ["## Reproduce", "", "```", "python core/run_feature_group_plots.py" + ("" if train == "train_native" else f" --train {train}"), "```", ""]
     path = OUT / ("FEATURE_GROUPS.md" if train == "train_native" else f"FEATURE_GROUPS_{train}.md")

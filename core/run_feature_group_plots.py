@@ -33,9 +33,11 @@ SURFACE = [("cognitive", "sentence_length"), ("cognitive", "parse_old")]
 CONCEPTS, TOPICS = [("grammar", "coverage_concepts")], [("grammar", "coverage_topics")]
 VOCAB = [("vocab", "freq"), ("vocab", "lexical")]
 FREQ = [("vocab", "freq")]
+LENGTH_LIKE = ["avg_word_length", "long_word_ratio", "n_unique_lemmas", "n_compound_tokens"]  # word-form features that mostly measure length
 # file name, title, signals, which columns to keep
 GROUPS = [
     ("best_surface_grammar_vocab", "surface + all grammar + all vocab", SURFACE + CONCEPTS + TOPICS + VOCAB, None),
+    ("grammar_vocab_no_length", "all grammar + all vocab, no length features", CONCEPTS + TOPICS + VOCAB, None),
     ("grammar_concept_only", "grammar-concept only", CONCEPTS, None),
     ("grammar_topic_only", "grammar-topic only", TOPICS, None),
     ("grammar_only", "grammar only (concept + topic)", CONCEPTS + TOPICS, None),
@@ -50,10 +52,10 @@ def gbm():
     return HistGradientBoostingRegressor(max_iter=300, learning_rate=0.05, random_state=0)
 
 
-def curated_data(signals, prefix, train_df, train_rows):
+def curated_data(signals, prefix, train_df, train_rows, drop=()):
     spec = {"signals": signals}
     (X_tr, _), (X_te, _) = feature_table("train", spec), feature_table("test", spec)
-    cols = [c for c in X_tr.columns if prefix is None or c.startswith(prefix) or c.startswith("mean_log_" + prefix.rstrip("_"))]
+    cols = [c for c in X_tr.columns if c not in drop and (prefix is None or c.startswith(prefix) or c.startswith("mean_log_" + prefix.rstrip("_")))]
     X_tr, X_te = X_tr[cols], X_te.reindex(columns=cols, fill_value=0.0)
     return X_tr.to_numpy()[train_rows], X_te.to_numpy(), len(cols)
 
@@ -108,7 +110,7 @@ def main():
     y_tr, y_te = train_df["label"].to_numpy()[rows], load_split("test")["label"].to_numpy()
     results = []
     for i, (name, title, signals, prefix) in enumerate(GROUPS, 1):
-        X_tr, X_te, n = curated_data(signals, prefix, train_df, rows)
+        X_tr, X_te, n = curated_data(signals, prefix, train_df, rows, LENGTH_LIKE if name == "grammar_vocab_no_length" else ())
         image = f"{args.train}/{i:02d}_{name}.png"
         results.append((title, n, image, draw(OUT / image, f"gradient boosting: {title} ({n} features)", y_te, gbm().fit(X_tr, y_tr).predict(X_te))))
     layer = best_bert_layer(args.train)
@@ -148,6 +150,8 @@ def write_report(train, results, layer):
          "- **surface**: the 7 length and parse features (sentence count, mean, max and standard deviation of sentence length; tree depth, distinct POS, sentence length from the old parse columns).",
          "- **grammar-concept / grammar-topic**: the share of every grammar concept (268) or syllabus topic (133) in the text.",
          "- **vocab-lemma / vocab-stem**: the share of the text's words in each frequency bin, by lemma (12) or stem (13), and the mean log frequency. **vocab only** is both (25).",
+         "- **all grammar + all vocab, no length features**: the same as the line below without surface: no sentence-length or parse features, and without the four word-form features that mostly measure length "
+         f"({', '.join(LENGTH_LIKE)}).",
          "- **surface + all grammar + all vocab**: surface, concepts, topics, and all vocab including the 11 word-form features (word length, distinct lemmas, compounds, suffix ratios).",
          "- **fine-tuned BERT (full / LoRA)**: BERT trained on the texts themselves, all 125M weights (full) or about 0.3M small adapter weights (LoRA); no hand-made features. Same train and test texts.",
          f"- **BERT-embedding**: the 768 numbers of layer {layer} of `TurkuNLP/bert-base-finnish-cased-v1`, the layer with the lowest miss for ridge regression on the test set (so slightly optimistic).", "",

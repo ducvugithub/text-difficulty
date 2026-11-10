@@ -223,6 +223,28 @@ CONFUSION_AND_OBSERVATIONS = [  # written after looking at the tables above and 
     "- **Grammar:** the individual concept shares alone rank the books as well as LoRA on paragraphs (corr 0.83) but put the levels too high (MAE 0.678); on dialogues corr is 0.55. The manual CEFR level shares, the rarity bins and all the topic features are weak.",
     "- **Vocabulary alone is weak:** corr up to 0.70 on paragraphs and up to 0.16 on dialogues. The choice of binning method makes little difference (for example lemma decades MAE 1.103 against equal share 0.975).",
     "- **Dialogues are harder than paragraphs** for almost every model, probably because the models were trained on paragraph-style texts.",
+    "", "## SM4 against the real B2 and B1 texts", "",
+    "Mean values for the 12 SM4 paragraph texts and for the real-Finnish train texts labelled B2 (104 texts) and B1 (673 texts). Grammar rows are shares of a text, the common concepts that differ most between SM4 and B2.", "",
+    "| feature | SM4 | B2 | B1 |", "|---|---|---|---|",
+    "| words per text | 360 | 190 | 200 |",
+    "| characters per text | 3064 | 1703 | 1715 |",
+    "| mean word length | 7.32 | 7.60 | 7.40 |",
+    "| mean sentence length | 4.78 | 6.19 | 6.46 |",
+    "| adverb concept | 0.018 | 0.004 | 0.008 |",
+    "| present tense | 0.019 | 0.034 | 0.029 |",
+    "| type-token ratio (first 200 words) | 0.68 | 0.53 | 0.59 |",
+    "| first-infinitive lative | 0.005 | 0.012 | 0.007 |",
+    "| passive, present | 0.002 | 0.007 | 0.005 |",
+    "| passive voice | 0.004 | 0.009 | 0.008 |",
+    "| second person | 0.002 | 0.010 | 0.003 |",
+    "| singular number | 0.100 | 0.119 | 0.105 |",
+    "| partitive case | 0.015 | 0.024 | 0.020 |",
+    "| adverb-sti derivation | 0.016 | 0.005 | 0.005 |",
+    "| imperfect tense | 0.009 | 0.002 | 0.011 |",
+    "",
+    "SM4 has shorter sentences and fewer passives, first-infinitive lative and partitive forms than real B2, which fits simpler grammar. "
+    "Adverbs and the imperfect tense are higher in SM4, and present tense is lower, so the grammar is not simply easier throughout. "
+    "SM4 texts are also much longer than the real texts, which comes from how the passages were cut.",
 ]
 
 

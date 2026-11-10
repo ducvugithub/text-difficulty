@@ -188,26 +188,42 @@ def score(csv_name, title, strip, tr, rows, y, report):
         X_new = pd.concat([blocks.new(b) for b in parts], axis=1).reindex(columns=X_tr.columns, fill_value=0.0)
         results.append((group, name, gbm().fit(X_tr, y).predict(X_new)))
     results.append(("constant", "constant guess (the mean estimate)", np.full(len(est), float(est.mean()))))
-    head = ["model", "exactly right", "within 0.5", "within 1.0", "MAE (%)", "MSE (%)", "corr"]
+    head = ["model", "exactly right", "within 0.5", "MAE (%)", "MSE (%)", "corr"]
     lines = [f"\n### {title}: {len(books)} texts (" + ", ".join(f"{b} {int((books['book'] == b).sum())}" for b in BOOK_INDEX) + ")", "",
              "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     out, last = books[["id", "book", "chapter", "pages", "kind", "estimated_label"]].copy(), None
     for group, name, p in results:
         if group != last:
-            lines.append(f"| **{group}** | | | | | | |")
+            lines.append(f"| **{group}** | | | | | |")
             last = group
         if p is None:
-            lines.append(f"| {name} | not available yet | | | | | |")
+            lines.append(f"| {name} | not available yet | | | | |")
             continue
-        ex, w1, w2 = accuracy(p, gold)
+        ex, w1, _ = accuracy(p, gold)
         err = p - est
         corr = float(np.corrcoef(p, est)[0, 1]) if p.std() > 0 else float("nan")
-        lines.append(f"| {name} | {ex:.0%} | {w1:.0%} | {w2:.0%} | {fmt(np.abs(err).mean())} | {100 * (err ** 2).mean() / R ** 2:.1f}% | {corr:.2f} |")
+        lines.append(f"| {name} | {ex:.0%} | {w1:.0%} | {fmt(np.abs(err).mean())} | {100 * (err ** 2).mean() / R ** 2:.1f}% | {corr:.2f} |")
         out[name] = np.round(p, 3)
     lines += ["", "answer = the estimated label rounded to the nearest half step; prediction rounded the same way. MAE, MSE (as a share of the squared label range) and corr are against the unrounded estimated label."]
     out.to_csv(DATA / f"predictions_{csv_name.replace('_texts.csv', '')}.csv", index=False)
     report.extend(lines)
     print("\n".join(lines), flush=True)
+
+
+CONFUSION_AND_OBSERVATIONS = [  # written after looking at the tables above and at the figures of textbooks/plot_confusion.py; update when the numbers change
+    "", "## Confusion matrices", "",
+    "Rows are the SM books with their estimated label range, columns the predicted level rounded to 0.5, cells the number of texts; the title of each panel gives the share of texts predicted inside the range of their book (figures made by `textbooks/plot_confusion.py`).", "",
+    "Paragraph texts:", "", "![confusion matrices, paragraph texts](graphs/confusion_paragraph.png)", "",
+    "Dialogue texts:", "", "![confusion matrices, dialogue texts](graphs/confusion_dialogue.png)", "",
+    "## Observations", "",
+    "- **BERT:** LoRA is the best of the three BERT variants on both sets (paragraphs MAE 0.526, corr 0.83; dialogues MAE 0.661, corr 0.52). Frozen layer 5 (0.637, 0.75) and full fine-tuning (0.688, 0.58) are worse on paragraphs; on dialogues full fine-tuning (0.765, 0.41) is also behind LoRA.",
+    "- **Length features alone are weak:** sentence length and the surface measures reach corr 0.15 to 0.53 on paragraphs and between -0.15 and 0.34 on dialogues.",
+    "- **Vocabulary and grammar with length get close to BERT on paragraphs:** vocabulary + concept individual share + surface has MAE 0.525, corr 0.70 and 29% exactly right, against LoRA 0.526, 0.83 and 21%. On dialogues it is level with LoRA (MAE 0.685 against 0.661, corr 0.53 against 0.52).",
+    "- **Length helps only in combination:** adding the surface measures to vocabulary + concept individual share lowers the paragraph MAE from 0.815 to 0.525, although the surface measures alone are weak.",
+    "- **Grammar:** the individual concept shares alone rank the books as well as LoRA on paragraphs (corr 0.83) but put the levels too high (MAE 0.678); on dialogues corr is 0.55. The manual CEFR level shares, the rarity bins and all the topic features are weak.",
+    "- **Vocabulary alone is weak:** corr up to 0.70 on paragraphs and up to 0.16 on dialogues. The choice of binning method makes little difference (for example lemma decades MAE 1.103 against equal share 0.975).",
+    "- **Dialogues are harder than paragraphs** for almost every model, probably because the models were trained on paragraph-style texts.",
+]
 
 
 def main():
@@ -246,6 +262,7 @@ def main():
               "A third option, equal count (not scored), gives every bin the same number of distinct words."]
     score("paragraph_texts.csv", "Paragraph texts", False, tr, rows, y, report)
     score("dialogue_texts.csv", "Dialogue texts (speaker labels removed)", True, tr, rows, y, report)
+    report += CONFUSION_AND_OBSERVATIONS
     out = ROOT / "reports" / "textbook_evaluation" / "TEXTBOOK_RESULTS.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(report) + "\n", encoding="utf-8")

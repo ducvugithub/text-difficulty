@@ -37,84 +37,106 @@ A third option, equal count (not scored), gives every bin the same number of dis
 
 ### Paragraph texts: 38 texts (sm1 8, sm2 6, sm3 12, sm4 12)
 
-| model | exactly right | within 0.5 | within 1.0 | MAE (%) | MSE (%) | corr |
-|---|---|---|---|---|---|---|
-| **BERT** | | | | | | |
-| bert-base-finnish-cased-v1 frozen, layer 5 + gradient boosting | 26% | 66% | 87% | 0.637 (12.7%) | 2.4% | 0.75 |
-| bert-base-finnish-cased-v1 LoRA + linear head (0.3M trained) | 21% | 76% | 97% | 0.526 (10.5%) | 1.6% | 0.83 |
-| bert-base-finnish-cased-v1 full + linear head (124.5M trained) | 21% | 63% | 84% | 0.688 (13.8%) | 3.0% | 0.58 |
-| **length** | | | | | | |
-| sentence length (4) | 8% | 47% | 74% | 0.870 (17.4%) | 4.2% | 0.15 |
-| surface measures (4) | 18% | 55% | 89% | 0.698 (14.0%) | 2.7% | 0.48 |
-| sentence length + surface | 16% | 68% | 95% | 0.639 (12.8%) | 2.3% | 0.53 |
-| **grammar** | | | | | | |
-| concept individual share (268) | 18% | 68% | 84% | 0.678 (13.6%) | 2.9% | 0.83 |
-| concept manual CEFR level share (8) | 5% | 16% | 45% | 1.307 (26.1%) | 7.9% | 0.74 |
-| concept rarity bin share (9) | 0% | 16% | 34% | 1.565 (31.3%) | 11.8% | 0.60 |
-| topic individual share (133) | 8% | 24% | 39% | 1.686 (33.7%) | 15.8% | -0.32 |
-| topic manual CEFR level share (4) | 5% | 16% | 47% | 1.641 (32.8%) | 15.0% | -0.19 |
-| topic rarity bin share (8) | 3% | 21% | 34% | 1.693 (33.9%) | 14.8% | 0.14 |
-| concept individual share + manual CEFR level share + rarity | 24% | 63% | 84% | 0.684 (13.7%) | 2.9% | 0.82 |
-| **vocabulary** | | | | | | |
-| lemma frequency bins, decades (12) | 11% | 34% | 71% | 1.103 (22.1%) | 6.7% | 0.65 |
-| lemma frequency bins, equal-share (13) | 16% | 42% | 68% | 0.975 (19.5%) | 5.6% | 0.61 |
-| stem frequency bins, equal-share (13) | 11% | 37% | 58% | 1.169 (23.4%) | 7.6% | 0.59 |
-| stem frequency bins, decades (12) | 5% | 21% | 39% | 1.425 (28.5%) | 9.9% | 0.61 |
-| lemma decades + stem equal-share (25) | 16% | 45% | 74% | 0.927 (18.5%) | 5.0% | 0.68 |
-| lemma decades + stem decades (24) | 13% | 37% | 61% | 1.036 (20.7%) | 5.7% | 0.70 |
-| lemma equal-share + stem equal-share (26) | 8% | 53% | 71% | 0.942 (18.8%) | 5.4% | 0.62 |
-| lexical features, word form (11) | 18% | 45% | 63% | 0.989 (19.8%) | 5.9% | 0.72 |
-| lemma decades + stem equal-share + lexical features, word form (36) | 18% | 50% | 68% | 0.975 (19.5%) | 5.7% | 0.70 |
-| **combination** | | | | | | |
-| vocabulary (bins + lexical) + concept individual share | 18% | 55% | 76% | 0.815 (16.3%) | 3.9% | 0.79 |
-| vocabulary (bins + lexical) + concept manual CEFR level share + rarity | 16% | 47% | 74% | 0.921 (18.4%) | 5.3% | 0.79 |
-| **combination + length** | | | | | | |
-| vocabulary + concept individual share + sentence length | 29% | 76% | 89% | 0.548 (11.0%) | 2.0% | 0.66 |
-| vocabulary + concept individual share + surface | 29% | 74% | 95% | 0.525 (10.5%) | 1.9% | 0.70 |
-| vocabulary + concept individual share + sentence length + surface | 32% | 71% | 92% | 0.535 (10.7%) | 2.1% | 0.65 |
-| **constant** | | | | | | |
-| constant guess (the mean estimate) | 21% | 50% | 87% | 0.717 (14.3%) | 2.7% | -0.00 |
+| model | exactly right | within 0.5 | MAE (%) | MSE (%) | corr |
+|---|---|---|---|---|---|
+| **BERT** | | | | | |
+| bert-base-finnish-cased-v1 frozen, layer 5 + gradient boosting | 26% | 66% | 0.637 (12.7%) | 2.4% | 0.75 |
+| bert-base-finnish-cased-v1 LoRA + linear head (0.3M trained) | 21% | 76% | 0.526 (10.5%) | 1.6% | 0.83 |
+| bert-base-finnish-cased-v1 full + linear head (124.5M trained) | 21% | 63% | 0.688 (13.8%) | 3.0% | 0.58 |
+| **length** | | | | | |
+| sentence length (4) | 8% | 47% | 0.870 (17.4%) | 4.2% | 0.15 |
+| surface measures (4) | 18% | 55% | 0.698 (14.0%) | 2.7% | 0.48 |
+| sentence length + surface | 16% | 68% | 0.639 (12.8%) | 2.3% | 0.53 |
+| **grammar** | | | | | |
+| concept individual share (268) | 18% | 68% | 0.678 (13.6%) | 2.9% | 0.83 |
+| concept manual CEFR level share (8) | 5% | 16% | 1.307 (26.1%) | 7.9% | 0.74 |
+| concept rarity bin share (9) | 0% | 16% | 1.565 (31.3%) | 11.8% | 0.60 |
+| topic individual share (133) | 8% | 24% | 1.686 (33.7%) | 15.8% | -0.32 |
+| topic manual CEFR level share (4) | 5% | 16% | 1.641 (32.8%) | 15.0% | -0.19 |
+| topic rarity bin share (8) | 3% | 21% | 1.693 (33.9%) | 14.8% | 0.14 |
+| concept individual share + manual CEFR level share + rarity | 24% | 63% | 0.684 (13.7%) | 2.9% | 0.82 |
+| **vocabulary** | | | | | |
+| lemma frequency bins, decades (12) | 11% | 34% | 1.103 (22.1%) | 6.7% | 0.65 |
+| lemma frequency bins, equal-share (13) | 16% | 42% | 0.975 (19.5%) | 5.6% | 0.61 |
+| stem frequency bins, equal-share (13) | 11% | 37% | 1.169 (23.4%) | 7.6% | 0.59 |
+| stem frequency bins, decades (12) | 5% | 21% | 1.425 (28.5%) | 9.9% | 0.61 |
+| lemma decades + stem equal-share (25) | 16% | 45% | 0.927 (18.5%) | 5.0% | 0.68 |
+| lemma decades + stem decades (24) | 13% | 37% | 1.036 (20.7%) | 5.7% | 0.70 |
+| lemma equal-share + stem equal-share (26) | 8% | 53% | 0.942 (18.8%) | 5.4% | 0.62 |
+| lexical features, word form (11) | 18% | 45% | 0.989 (19.8%) | 5.9% | 0.72 |
+| lemma decades + stem equal-share + lexical features, word form (36) | 18% | 50% | 0.975 (19.5%) | 5.7% | 0.70 |
+| **combination** | | | | | |
+| vocabulary (bins + lexical) + concept individual share | 18% | 55% | 0.815 (16.3%) | 3.9% | 0.79 |
+| vocabulary (bins + lexical) + concept manual CEFR level share + rarity | 16% | 47% | 0.921 (18.4%) | 5.3% | 0.79 |
+| **combination + length** | | | | | |
+| vocabulary + concept individual share + sentence length | 29% | 76% | 0.548 (11.0%) | 2.0% | 0.66 |
+| vocabulary + concept individual share + surface | 29% | 74% | 0.525 (10.5%) | 1.9% | 0.70 |
+| vocabulary + concept individual share + sentence length + surface | 32% | 71% | 0.535 (10.7%) | 2.1% | 0.65 |
+| **constant** | | | | | |
+| constant guess (the mean estimate) | 21% | 50% | 0.717 (14.3%) | 2.7% | -0.00 |
 
 answer = the estimated label rounded to the nearest half step; prediction rounded the same way. MAE, MSE (as a share of the squared label range) and corr are against the unrounded estimated label.
 
 ### Dialogue texts (speaker labels removed): 31 texts (sm1 11, sm2 4, sm3 9, sm4 7)
 
-| model | exactly right | within 0.5 | within 1.0 | MAE (%) | MSE (%) | corr |
-|---|---|---|---|---|---|---|
-| **BERT** | | | | | | |
-| bert-base-finnish-cased-v1 frozen, layer 5 + gradient boosting | 19% | 39% | 87% | 0.818 (16.4%) | 3.6% | 0.38 |
-| bert-base-finnish-cased-v1 LoRA + linear head (0.3M trained) | 35% | 61% | 81% | 0.661 (13.2%) | 2.9% | 0.52 |
-| bert-base-finnish-cased-v1 full + linear head (124.5M trained) | 29% | 58% | 71% | 0.765 (15.3%) | 4.1% | 0.41 |
-| **length** | | | | | | |
-| sentence length (4) | 19% | 58% | 84% | 0.708 (14.2%) | 3.0% | 0.34 |
-| surface measures (4) | 6% | 61% | 87% | 0.753 (15.1%) | 2.9% | 0.31 |
-| sentence length + surface | 6% | 42% | 84% | 0.872 (17.4%) | 4.2% | -0.15 |
-| **grammar** | | | | | | |
-| concept individual share (268) | 19% | 61% | 84% | 0.654 (13.1%) | 2.5% | 0.55 |
-| concept manual CEFR level share (8) | 23% | 45% | 58% | 0.976 (19.5%) | 6.0% | 0.41 |
-| concept rarity bin share (9) | 3% | 13% | 29% | 1.716 (34.3%) | 14.6% | 0.47 |
-| topic individual share (133) | 0% | 6% | 26% | 1.936 (38.7%) | 17.4% | 0.47 |
-| topic manual CEFR level share (4) | 10% | 23% | 32% | 1.967 (39.3%) | 21.3% | -0.34 |
-| topic rarity bin share (8) | 6% | 16% | 26% | 1.861 (37.2%) | 16.8% | 0.30 |
-| concept individual share + manual CEFR level share + rarity | 26% | 55% | 90% | 0.643 (12.9%) | 2.4% | 0.57 |
-| **vocabulary** | | | | | | |
-| lemma frequency bins, decades (12) | 3% | 16% | 39% | 1.541 (30.8%) | 11.7% | 0.11 |
-| lemma frequency bins, equal-share (13) | 6% | 19% | 48% | 1.533 (30.7%) | 12.8% | -0.01 |
-| stem frequency bins, equal-share (13) | 6% | 23% | 29% | 1.853 (37.1%) | 17.8% | -0.26 |
-| stem frequency bins, decades (12) | 13% | 16% | 19% | 1.924 (38.5%) | 19.0% | -0.10 |
-| lemma decades + stem equal-share (25) | 3% | 13% | 42% | 1.414 (28.3%) | 9.7% | 0.16 |
-| lemma decades + stem decades (24) | 0% | 23% | 48% | 1.319 (26.4%) | 8.7% | 0.16 |
-| lemma equal-share + stem equal-share (26) | 0% | 23% | 45% | 1.397 (27.9%) | 10.5% | 0.07 |
-| lexical features, word form (11) | 13% | 39% | 71% | 1.038 (20.8%) | 6.5% | 0.14 |
-| lemma decades + stem equal-share + lexical features, word form (36) | 6% | 39% | 61% | 1.115 (22.3%) | 6.7% | 0.15 |
-| **combination** | | | | | | |
-| vocabulary (bins + lexical) + concept individual share | 13% | 52% | 77% | 0.768 (15.4%) | 3.2% | 0.44 |
-| vocabulary (bins + lexical) + concept manual CEFR level share + rarity | 19% | 42% | 61% | 0.981 (19.6%) | 5.5% | 0.27 |
-| **combination + length** | | | | | | |
-| vocabulary + concept individual share + sentence length | 13% | 45% | 84% | 0.805 (16.1%) | 3.5% | 0.31 |
-| vocabulary + concept individual share + surface | 26% | 68% | 84% | 0.685 (13.7%) | 3.0% | 0.53 |
-| vocabulary + concept individual share + sentence length + surface | 19% | 52% | 87% | 0.805 (16.1%) | 3.6% | 0.28 |
-| **constant** | | | | | | |
-| constant guess (the mean estimate) | 3% | 45% | 84% | 0.820 (16.4%) | 3.1% | -0.00 |
+| model | exactly right | within 0.5 | MAE (%) | MSE (%) | corr |
+|---|---|---|---|---|---|
+| **BERT** | | | | | |
+| bert-base-finnish-cased-v1 frozen, layer 5 + gradient boosting | 19% | 39% | 0.818 (16.4%) | 3.6% | 0.38 |
+| bert-base-finnish-cased-v1 LoRA + linear head (0.3M trained) | 35% | 61% | 0.661 (13.2%) | 2.9% | 0.52 |
+| bert-base-finnish-cased-v1 full + linear head (124.5M trained) | 29% | 58% | 0.765 (15.3%) | 4.1% | 0.41 |
+| **length** | | | | | |
+| sentence length (4) | 19% | 58% | 0.708 (14.2%) | 3.0% | 0.34 |
+| surface measures (4) | 6% | 61% | 0.753 (15.1%) | 2.9% | 0.31 |
+| sentence length + surface | 6% | 42% | 0.872 (17.4%) | 4.2% | -0.15 |
+| **grammar** | | | | | |
+| concept individual share (268) | 19% | 61% | 0.654 (13.1%) | 2.5% | 0.55 |
+| concept manual CEFR level share (8) | 23% | 45% | 0.976 (19.5%) | 6.0% | 0.41 |
+| concept rarity bin share (9) | 3% | 13% | 1.716 (34.3%) | 14.6% | 0.47 |
+| topic individual share (133) | 0% | 6% | 1.936 (38.7%) | 17.4% | 0.47 |
+| topic manual CEFR level share (4) | 10% | 23% | 1.967 (39.3%) | 21.3% | -0.34 |
+| topic rarity bin share (8) | 6% | 16% | 1.861 (37.2%) | 16.8% | 0.30 |
+| concept individual share + manual CEFR level share + rarity | 26% | 55% | 0.643 (12.9%) | 2.4% | 0.57 |
+| **vocabulary** | | | | | |
+| lemma frequency bins, decades (12) | 3% | 16% | 1.541 (30.8%) | 11.7% | 0.11 |
+| lemma frequency bins, equal-share (13) | 6% | 19% | 1.533 (30.7%) | 12.8% | -0.01 |
+| stem frequency bins, equal-share (13) | 6% | 23% | 1.853 (37.1%) | 17.8% | -0.26 |
+| stem frequency bins, decades (12) | 13% | 16% | 1.924 (38.5%) | 19.0% | -0.10 |
+| lemma decades + stem equal-share (25) | 3% | 13% | 1.414 (28.3%) | 9.7% | 0.16 |
+| lemma decades + stem decades (24) | 0% | 23% | 1.319 (26.4%) | 8.7% | 0.16 |
+| lemma equal-share + stem equal-share (26) | 0% | 23% | 1.397 (27.9%) | 10.5% | 0.07 |
+| lexical features, word form (11) | 13% | 39% | 1.038 (20.8%) | 6.5% | 0.14 |
+| lemma decades + stem equal-share + lexical features, word form (36) | 6% | 39% | 1.115 (22.3%) | 6.7% | 0.15 |
+| **combination** | | | | | |
+| vocabulary (bins + lexical) + concept individual share | 13% | 52% | 0.768 (15.4%) | 3.2% | 0.44 |
+| vocabulary (bins + lexical) + concept manual CEFR level share + rarity | 19% | 42% | 0.981 (19.6%) | 5.5% | 0.27 |
+| **combination + length** | | | | | |
+| vocabulary + concept individual share + sentence length | 13% | 45% | 0.805 (16.1%) | 3.5% | 0.31 |
+| vocabulary + concept individual share + surface | 26% | 68% | 0.685 (13.7%) | 3.0% | 0.53 |
+| vocabulary + concept individual share + sentence length + surface | 19% | 52% | 0.805 (16.1%) | 3.6% | 0.28 |
+| **constant** | | | | | |
+| constant guess (the mean estimate) | 3% | 45% | 0.820 (16.4%) | 3.1% | -0.00 |
 
 answer = the estimated label rounded to the nearest half step; prediction rounded the same way. MAE, MSE (as a share of the squared label range) and corr are against the unrounded estimated label.
+
+## Confusion matrices
+
+Rows are the SM books with their estimated label range, columns the predicted level rounded to 0.5, cells the number of texts; the title of each panel gives the share of texts predicted inside the range of their book (figures made by `textbooks/plot_confusion.py`).
+
+Paragraph texts:
+
+![confusion matrices, paragraph texts](graphs/confusion_paragraph.png)
+
+Dialogue texts:
+
+![confusion matrices, dialogue texts](graphs/confusion_dialogue.png)
+
+## Observations
+
+- **BERT:** LoRA is the best of the three BERT variants on both sets (paragraphs MAE 0.526, corr 0.83; dialogues MAE 0.661, corr 0.52). Frozen layer 5 (0.637, 0.75) and full fine-tuning (0.688, 0.58) are worse on paragraphs; on dialogues full fine-tuning (0.765, 0.41) is also behind LoRA.
+- **Length features alone are weak:** sentence length and the surface measures reach corr 0.15 to 0.53 on paragraphs and between -0.15 and 0.34 on dialogues.
+- **Vocabulary and grammar with length get close to BERT on paragraphs:** vocabulary + concept individual share + surface has MAE 0.525, corr 0.70 and 29% exactly right, against LoRA 0.526, 0.83 and 21%. On dialogues it is level with LoRA (MAE 0.685 against 0.661, corr 0.53 against 0.52).
+- **Length helps only in combination:** adding the surface measures to vocabulary + concept individual share lowers the paragraph MAE from 0.815 to 0.525, although the surface measures alone are weak.
+- **Grammar:** the individual concept shares alone rank the books as well as LoRA on paragraphs (corr 0.83) but put the levels too high (MAE 0.678); on dialogues corr is 0.55. The manual CEFR level shares, the rarity bins and all the topic features are weak.
+- **Vocabulary alone is weak:** corr up to 0.70 on paragraphs and up to 0.16 on dialogues. The choice of binning method makes little difference (for example lemma decades MAE 1.103 against equal share 0.975).
+- **Dialogues are harder than paragraphs** for almost every model, probably because the models were trained on paragraph-style texts.

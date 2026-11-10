@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH -A project_2006601
+#SBATCH --job-name=td_finetune
+#SBATCH -o logs/finetune_%a_%j.log
+#SBATCH -p gpumedium
+#SBATCH --nodes=1
+#SBATCH -c 16
+#SBATCH -t 01:00:00
+#SBATCH --mem=96G
+#SBATCH --gres=gpu:gh200:1
+
+# Fine-tune BERT on the real-Finnish training rows and save the weights of the best epoch (outputs/finetuned/<variant>_train_native/).
+# Usage (from /scratch/project_2006601/ducvu/text-difficulty):
+#   both variants:  sbatch --array=0-1 bert_based/slurms/finetune_save.job     (0 = LoRA, 1 = full fine-tuning)
+#   one variant:    sbatch --array=0 bert_based/slurms/finetune_save.job
+
+VARIANTS=(lora full)
+VARIANT=${VARIANTS[${SLURM_ARRAY_TASK_ID:-0}]}
+EXTRA=""
+if [ "$VARIANT" == "lora" ]; then EXTRA="--lora"; fi
+
+# the batch shell has no `module` command by default (jobs submitted from an interactive login shell inherit it): load the module system explicitly
+source /usr/share/lmod/lmod/init/bash
+export MODULEPATH=$MODULEPATH:/appl/modulefiles/manual/aida/aarch64
+module purge
+module load python-pytorch/2.10
+
+export HF_HOME=/scratch/project_2006601/ducvu/hf_cache
+export TRANSFORMERS_CACHE=$HF_HOME
+export HF_HUB_OFFLINE=1   # the model was downloaded on the login node
+export TMPDIR=/scratch/project_2006601/ducvu/tmp
+mkdir -p $TMPDIR logs
+
+cd /scratch/project_2006601/ducvu/text-difficulty
+
+echo "Fine-tuning ($VARIANT) at $(date) on $(hostname)"
+nvidia-smi -L | head -2
+srun python bert_based/run_finetune.py --train train_native $EXTRA --save-model
+echo "Done at $(date)"

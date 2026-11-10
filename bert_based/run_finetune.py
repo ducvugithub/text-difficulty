@@ -29,6 +29,7 @@ from core.reporting import confusion_md, pct, steps, table, mae_fmt, PCT_NOTE  #
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "bert_based" / "reports" / "runs"
 REPORT = ROOT / "bert_based" / "reports" / "BERT_FINETUNE.md"
+SAVED = ROOT / "outputs" / "finetuned"
 CURATED_RUNS = ROOT / "curated_features" / "modeling" / "reports" / "runs"
 VARIANTS = {"lora": "BERT, fine-tuned with LoRA", "full": "BERT, fully fine-tuned"}
 CURATED_CONTEXT = [("vocab_grammar_coverage_cognitive", "best curated set: vocab + grammar_coverage + cognitive (new)"),
@@ -138,6 +139,11 @@ def run(args):
         print(f"epoch {epoch}: train loss {running / steps_per_epoch:.3f}, valid (real Finnish) MAE {valid_mae:.3f}, {time.time() - start:.0f}s", flush=True)
         if best is None or valid_mae < best[0]:  # keep the predictions of the epoch that is best on valid
             best = (valid_mae, epoch, predict(model, tokenizer, test_texts, device, mean, std, args.window))
+            if args.save_model and not args.limit:  # the weights of the best epoch, to score other texts later (a LoRA adapter is about 1 MB, a full model about 500 MB)
+                folder = SAVED / f"{variant}_{args.train}"
+                folder.mkdir(parents=True, exist_ok=True)
+                model.save_pretrained(folder)
+                (folder / "meta.json").write_text(json.dumps({"base_model": args.model, "variant": variant, "mean": mean, "std": std, "window": args.window, "epoch": epoch}), encoding="utf-8")
     _, best_epoch, test_pred = best
     result = {"model": args.model, "variant": variant, "train": args.train, "epochs": args.epochs, "lr": lr, "lora_rank": args.lora_rank if args.lora else None,
               "trainable_parameters": trainable, "total_parameters": total_params, "batch_size": args.batch_size * args.accum, "window": args.window, "history": history, "best_epoch": best_epoch,
@@ -229,5 +235,6 @@ if __name__ == "__main__":
     ap.add_argument("--batch-size", type=int, default=8, help="windows per step on the device (memory); the effective batch is batch-size x accum")
     ap.add_argument("--accum", type=int, default=2, help="steps whose gradients are added before one update")
     ap.add_argument("--window", type=int, default=WINDOW, help="word-pieces per window (shorter = less memory)")
+    ap.add_argument("--save-model", action="store_true", help="save the weights of the best epoch to outputs/finetuned/<variant>_<train>/ (needed to score new texts later)")
     ap.add_argument("--limit", type=int, help="only the first N training texts, and nothing is saved (a quick trial)")
     run(ap.parse_args())
